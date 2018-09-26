@@ -1,3 +1,4 @@
+mod constants;
 mod event_machine;
 use event_machine::EventMachine;
 
@@ -21,7 +22,7 @@ fn consume_testing(inp: i32, state: &mut i32, output_stream: &mut EventStream<i3
     println!("  State: {:?}", state);
     println!("  Input: {:?}", inp);
     println!("  Output: {:?}", output_stream);
-    
+
     *state += 1;
     output_stream.push_next(100);
     // println!("input: {:?}", eventmachine.input);
@@ -31,7 +32,7 @@ fn consume_testing(inp: i32, state: &mut i32, output_stream: &mut EventStream<i3
 
 fn main() {
     println!("Hello, compiler!");
-    
+
 //    let mut i: VecDeque<i32> = VecDeque::new();
 //    let mut o: VecDeque<i32> = VecDeque::new();
     let mut s: i32 = 0;
@@ -92,7 +93,7 @@ fn main() {
     //     em.input.push_next(3);
     //     em.println();
     //     em.run_all();
-    //     em.println();    
+    //     em.println();
     // }
     // {
     //     let mut em2 = EventMachine {
@@ -100,7 +101,7 @@ fn main() {
     //         output: &mut i,
     //         state: &mut s2,
     //         consume_fn: consume_testing,
-    //     }; 
+    //     };
     // }
-    
+
 }

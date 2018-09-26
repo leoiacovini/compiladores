@@ -1,6 +1,6 @@
 use event_stream::EventStream;
+use constants::SPECIAL_CHARS;
 use std::collections::VecDeque;
-
 
 #[derive(Debug, PartialEq)]
 pub enum LineEventType {
@@ -18,7 +18,6 @@ pub struct LineConsumerEvent {
 struct LineConsumerState {
     last_char: char
 }
-
 
 #[derive(Debug, PartialEq)]
 pub enum AsciiSimpleType {
@@ -74,12 +73,11 @@ impl AsciiConsumerState {
 }
 
 fn get_ascii_type(c: char) -> AsciiType {
-    let special_chars = vec!['!', '@', '#', '%', '"', '&', '*', '(', ')', '_', '+', '-', '=', '§', '{', '[', 'a', '}', ']', 'o', '?', '/', '°', '`', '\'', '^', '~', '<', ',', '>', '.', ':', ';', '|', '\\', '“', '”'];
     match c {
             d if d.is_digit(10) => AsciiType::Digit,
             a if a.is_alphabetic() => AsciiType::Alphabetic,
             w if w.is_whitespace() => AsciiType::Delimiter,
-            s if special_chars.contains(&s) => AsciiType::Special,
+            s if SPECIAL_CHARS.contains(&s) => AsciiType::Special,
             _ => panic!("Invalid character")
     }
 }
@@ -88,8 +86,7 @@ trait Special {
 }
 impl Special for char {
     fn is_special(&self) -> bool {
-        let special_chars = vec!['!', '@', '#', '%', '"', '&', '*', '(', ')', '_', '+', '-', '=', '§', '{', '[', 'a', '}', ']', 'o', '?', '/', '°', '`', '\'', '^', '~', '<', ',', '>', '.', ':', ';', '|', '\\', '“', '”'];
-        return special_chars.contains(&self);
+        return SPECIAL_CHARS.contains(&self);
     }
 }
 
@@ -115,7 +112,7 @@ pub fn consume_line(inp: LineConsumerEvent, state: &mut i32, output_stream: &mut
                     output_stream.push_last(AsciiChar{
                         ascii_char: c,
                         ascii_simple_type: get_ascii_simple_type(c),
-                        ascii_type: get_ascii_type(c)
+                        ascii_type: get_ascii_type(c),
                     });
                 }
                 is_last_char_whitespace = c.is_whitespace();
@@ -125,6 +122,8 @@ pub fn consume_line(inp: LineConsumerEvent, state: &mut i32, output_stream: &mut
         LineEventType::EndOfFile => {}
     }
 }
+
+// Tests
 
 #[cfg(test)]
 mod tests {

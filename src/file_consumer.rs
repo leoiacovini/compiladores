@@ -1,8 +1,7 @@
 use event_stream::EventStream;
-use std::collections::VecDeque;
 use line_consumer::LineConsumerEvent;
 use line_consumer::LineEventType;
-
+use std::collections::VecDeque;
 use std::io::BufReader;
 use std::io::BufRead;
 use std::fs::File;
@@ -18,21 +17,12 @@ pub fn consume_file(inp: FileConsumerEvent, state: &mut i32, output_stream: &mut
     println!("  State: {:?}", state);
     println!("  Input: {:?}", inp);
     println!("  Output: {:?}", output_stream);
-    let f = match File::open(inp.filename) {
-        Ok(file) => file,
-        Err(_) => {
-            panic!("File not found!");
-        }
-    };
-    let file = BufReader::new(&f);
-    for (num, file_line) in file.lines().enumerate() {
+    let file = File::open(inp.filename).expect("File not found!");
+    for (num, file_line) in BufReader::new(&file).lines().enumerate() {
         *state = num as i32;
-        match file_line {
-            Ok(file_line) => output_stream.push_last(LineConsumerEvent{
-                event_type: LineEventType::Line(file_line)
-            }),
-            Err(_) => panic!("File line not found!"),
-        }
+         output_stream.push_last(LineConsumerEvent{
+                event_type: LineEventType::Line(file_line.expect("File line read error!"))
+        });
         output_stream.push_last(LineConsumerEvent{
             event_type: LineEventType::EndOfLine
         });
