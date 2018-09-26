@@ -1,4 +1,3 @@
-use std::collections::LinkedList;
 use std::collections::VecDeque;
 use std::fmt;
 
@@ -8,20 +7,6 @@ pub trait EventStream<K> : fmt::Debug where K : fmt::Debug{
     fn push_last(&mut self, val: K);
     fn is_empty(&self) -> bool;
 } 
-
-// impl <K> EventStream<K> for LinkedList<K> {
-//     fn consume_next(&mut self) -> Option<K> {
-//         return self.pop_front();
-//     }
-
-//     fn push_next(&mut self, val: K) {
-//         self.push_front(val);
-//     }
-
-//     fn push_last(&mut self, val: K) {
-//         self.push_back(val);
-//     }
-// }
 
 impl <K> EventStream<K> for VecDeque<K>  where K : fmt::Debug{
     fn consume_next(&mut self) -> Option<K> {
@@ -40,13 +25,6 @@ impl <K> EventStream<K> for VecDeque<K>  where K : fmt::Debug{
         self.is_empty()
     }
 }
-
-// impl <K> fmt::Debug for EventStream<K> {
-//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-//         write!(f, "Point {{ x: {}, y: {} }}", self.x, self.y)
-//     }
-// }
-
 
 #[cfg(test)]
 mod tests {

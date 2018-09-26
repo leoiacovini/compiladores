@@ -1,5 +1,4 @@
 use event_stream::EventStream;
-use std::collections::VecDeque;
 use std::fmt;
 //#[derive(Clone)]
 pub struct EventMachine<'lt, Input:'lt, Output:'lt, State:'lt> where Input: fmt::Debug, Output: fmt::Debug, State: fmt::Debug{
