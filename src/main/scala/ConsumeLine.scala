@@ -10,7 +10,7 @@ object ConsumeLine {
     cfo match {
       case FileLine(line) => line.toSeq.map(c => AsciiChar(c)) :+ EndOfLine
       case EndOfFile => Seq.empty[ConsumeLineOutput]
-      case _ => throw NotImplementedException
+      case _ => throw new NotImplementedException()
     }
   }
 }
