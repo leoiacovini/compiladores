@@ -1,18 +1,24 @@
 package event_machine
 
-case class Event[Input, Output, State](input: Input, output: Output, state: State)
-case class EventResult[Output, State](output: Output, state: State)
+import event_machine.EventMachine._
+
 object EventMachine {
-  type ConsumeFn[Input, Output, State] = Event[Input, Output, State] => EventResult[Output, State]
+
+  case class Event[Input, State](input: Input, state: State)
+
+  case class EventResult[Output, State](output: Output, state: State)
+
+  type ConsumeFn[Input, Output, State] = Event[Input, State] => EventResult[Output, State]
 }
 
 case class EventMachine[Input, Output, State](initialState: State,
-                                              initialOutput: Output,
-                                              consumeFn: EventMachine.ConsumeFn[Input, Output, State]) {
+                                              consumeFn: ConsumeFn[Input, Output, State]) {
 
-  def consume(inputs: Seq[Input]): Output = {
-    inputs.foldLeft(EventResult(initialOutput, initialState)) { (eventResult, input) =>
-      consumeFn(Event(input, eventResult.output, initialState))
-    }.output
+  def consume(inputs: Seq[Input]): Seq[Output] = {
+    val initialResult = (Seq[Output](), initialState)
+    inputs.foldLeft(initialResult) { case ((output, state), input) =>
+      val result = consumeFn(Event(input, state))
+      (output :+ result.output, result.state)
+    }._1
   }
 }
