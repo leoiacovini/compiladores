@@ -8,4 +8,7 @@ object CharAlphabets {
   val Alphanumeric: Set[Char] = Alphabetic ++ Numeric
   val Special: Set[Char] = Set('!', '@', '#', '%', '"', '&', '*', '(', ')', '_', '+', '-', '=', '§', '{', '[', 'a', '}',
     ']', 'o', '?', '/', '°', '`', '\'', '^', '~', '<', ',', '>', '.', ':', ';', '|', '\\', '“', '”')
+
+  def isSpecial(c: Char): Boolean = Special.contains(c)
 }
+

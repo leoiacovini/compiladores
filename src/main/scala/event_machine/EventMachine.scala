@@ -2,6 +2,7 @@ package event_machine
 
 
 object EventMachine {
+  object NotUsed
   def consume[Input, Output, State](em: EventMachine[Input, Output, State], input: Input) = {
     val (outputs, newState) = em.consumeFn(input, em.state)
     (outputs, em.copy(state = newState))

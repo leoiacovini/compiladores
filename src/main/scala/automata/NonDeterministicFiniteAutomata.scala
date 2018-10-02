@@ -18,6 +18,13 @@ object NonDeterministicFiniteAutomata {
     }.exists(nonDeterministicFiniteAutomata.acceptStates)
   }
 
+  def isDisjoint[Symbol, State](ndfas: NonDeterministicFiniteAutomata[Symbol, State]*): Boolean = {
+    (for {
+      ndfa1 <- ndfas
+      ndfa2 <- ndfas
+    } yield ndfa1.states.intersect(ndfa2.states).isEmpty) forall(_ == true)
+  }
+
   def concat[Symbol, State](ndfa1: NonDeterministicFiniteAutomata[Symbol, State],
                             ndfa2: NonDeterministicFiniteAutomata[Symbol, State]): NonDeterministicFiniteAutomata[Symbol, State] = {
     require(ndfa1.states.intersect(ndfa2.states).isEmpty, "States must be disjoint")

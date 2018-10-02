@@ -1,3 +1,5 @@
+package consumers
+
 import scala.io.Source
 
 object ConsumeFile {
