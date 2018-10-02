@@ -25,7 +25,7 @@ object ConsumeChars {
   case class ConsumeCharState[State](ndfaRun: Option[NDFARun[Char, State]], accumulator: String = "") {
     def push(c: Char): ConsumeCharState[State] = copy(accumulator = accumulator + c)
     def run(c: Char): ConsumeCharState[State] = ndfaRun match {
-      case Some(ndfaRunv) => ConsumeCharState(Some(NDFARun(ndfaRunv.ndfa, ndfaRunv.run(c)))).push(c)
+      case Some(ndfaRunv) => ConsumeCharState(Some(NDFARun(ndfaRunv.ndfa, ndfaRunv.run(c))), accumulator).push(c)
       case None => this
     }
   }
@@ -34,10 +34,13 @@ object ConsumeChars {
   }
   def apply[State, NewState](char: AsciiChar, state: ConsumeCharState[State]): (ConsumeCharState[NewState], Option[String]) = {
     state.ndfaRun match {
-      case Some(id: NDFARun[Char, IdentifierState]) if id.isInstanceOf[NDFARun[Char, IdentifierState]] =>
+      case Some(id: NDFARun[Char, _]) =>
         val newState: ConsumeCharState[State] = state.run(char.c)
+
+//        println(char.c, state.accumulator, newState.accumulator)
         if (id.isAccepted && !newState.ndfaRun.forall(x => x.isAccepted)) {
-          ConsumeCharState.empty[NewState] -> Some(newState.accumulator)
+          val (newState, _) = apply[State, NewState](char, ConsumeCharState.empty[State])
+          newState -> Some(state.accumulator)
         } else {
           newState.asInstanceOf[ConsumeCharState[NewState]] -> None
         }

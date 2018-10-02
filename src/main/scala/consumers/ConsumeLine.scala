@@ -26,7 +26,7 @@ object ConsumeLine {
   case object Special extends AsciiCategory
 
   sealed trait ConsumeLineOutput // find better name
-  case class AsciiChar(c: Char, baf: BasicAsciiFilter, asciiCategory: AsciiCategory) extends ConsumeLineOutput //TODO: classificate character
+  case class AsciiChar(c: Char, baf: BasicAsciiFilter, asciiCategory: AsciiCategory) extends ConsumeLineOutput
   case object EndOfLine extends ConsumeLineOutput
 
   private def getAsciiCategory(c: Char): AsciiCategory = {
