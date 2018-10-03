@@ -1,5 +1,3 @@
-import automata.commons.IdentifierAutomata.IdentifierState
-import consumers.ConsumeChars.{ConsumeCharOutput, ConsumeCharState}
 import consumers.ConsumeFile.ConsumeFileOutput
 import consumers.ConsumeLine.{AsciiChar, ConsumeLineOutput}
 import consumers.{ConsumeChars, ConsumeFile, ConsumeLine}

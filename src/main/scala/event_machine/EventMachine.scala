@@ -8,6 +8,10 @@ object EventMachine {
   case class Event[Input, State](input: Input, state: State)
 
   case class EventResult[Output, State](output: Seq[Output], state: State)
+  case object EventResult {
+    def single[Output, State](output: Output, state: State) = EventResult(Seq(output), state)
+    def empty[Output, State](state: State) = EventResult(Seq[Output](), state)
+  }
 
   type ConsumeFn[Input, Output, State] = Event[Input, State] => EventResult[Output, State]
 }
