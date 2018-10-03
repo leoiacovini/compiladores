@@ -9,6 +9,6 @@ case class NDFARunner[Input, State](ndfa: NonDeterministicFiniteAutomata[Input, 
   }
 
   def isAccepted: Boolean = {
-    currentStates.exists(ndfa.acceptStates)
+    currentStates.exists(ndfa.acceptStates.contains)
   }
 }

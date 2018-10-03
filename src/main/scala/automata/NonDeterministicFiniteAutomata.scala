@@ -1,11 +1,11 @@
 package automata
 
-trait NonDeterministicFiniteAutomata[Symbol, State] {
-  val alphabet: Set[Symbol]
+trait NonDeterministicFiniteAutomata[Symbol, +State] {
+  val alphabet: Seq[Symbol]
   val initialState: State
-  val states: Set[State]
-  val acceptStates: Set[State]
-  def transition(state: State, symbol: Symbol): Set[State]
+  val states: Seq[State]
+  val acceptStates: Seq[State]
+  def transition[S >: State](state: S, symbol: Symbol): Seq[State]
 }
 
 object NonDeterministicFiniteAutomata {
@@ -15,7 +15,7 @@ object NonDeterministicFiniteAutomata {
         state <- states
         newStates <- nonDeterministicFiniteAutomata.transition(state, symbol)
       } yield newStates
-    }.exists(nonDeterministicFiniteAutomata.acceptStates)
+    }.exists(nonDeterministicFiniteAutomata.acceptStates.toSet)
   }
 
   def isDisjoint[Symbol, State](ndfas: NonDeterministicFiniteAutomata[Symbol, State]*): Boolean = {
@@ -29,16 +29,16 @@ object NonDeterministicFiniteAutomata {
                             ndfa2: NonDeterministicFiniteAutomata[Symbol, State]): NonDeterministicFiniteAutomata[Symbol, State] = {
     require(ndfa1.states.intersect(ndfa2.states).isEmpty, "States must be disjoint")
     new NonDeterministicFiniteAutomata[Symbol, State] {
-      override val alphabet: Set[Symbol] = ndfa1.alphabet ++ ndfa2.alphabet
+      override val alphabet: Seq[Symbol] = ndfa1.alphabet ++ ndfa2.alphabet
       override val initialState: State = ndfa1.initialState
-      override val states: Set[State] = ndfa1.states ++ ndfa1.states
-      override val acceptStates: Set[State] = ndfa2.acceptStates
+      override val states: Seq[State] = ndfa1.states ++ ndfa1.states
+      override val acceptStates: Seq[State] = ndfa2.acceptStates
 
-      override def transition(state: State, symbol: Symbol): Set[State] = {
+      override def transition[S >: State](state: S, symbol: Symbol): Seq[State] = {
         if(ndfa1.states.contains(state)) {
           val newStates = ndfa1.transition(state, symbol)
-          if (newStates.exists(ndfa1.acceptStates))
-            newStates + ndfa2.initialState
+          if (newStates.exists(ndfa1.acceptStates.contains))
+            newStates :+ ndfa2.initialState
           else
             newStates
         } else {
