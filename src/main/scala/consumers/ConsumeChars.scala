@@ -33,12 +33,7 @@ object ConsumeChars {
     }
   }
 
-  private def stateForEvent(event: ConsumeCharEvent): ConsumeCharState = {
-    runnerForAscii(event.input) match {
-      case Some(runner) => ConsumeCharState(Some(runner))
-      case None => event.state
-    }
-  }
+  private def stateForEvent(event: ConsumeCharEvent): ConsumeCharState = ConsumeCharState(runnerForAscii(event.input))
 
   private def startNewNdfa(event: ConsumeCharEvent): ConsumeCharEventResult = {
     runnerForAscii(event.input) match {
@@ -50,7 +45,7 @@ object ConsumeChars {
   private def processNdfa(event: ConsumeCharEvent): ConsumeCharEventResult = {
     val newState: ConsumeCharState = event.state.run(event.input.c)
     if (event.state.ndfaRunner.forall(x => x.isAccepted) && !newState.ndfaRunner.forall(x => x.isAccepted)) {
-      EventResult.single(event.state.accumulator, stateForEvent(event))
+      EventResult.single(event.state.accumulator, stateForEvent(event).run(event.input.c))
     } else {
       EventResult.empty(newState) // Empty output
     }
