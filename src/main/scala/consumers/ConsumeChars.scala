@@ -1,63 +1,67 @@
 package consumers
 
-import automata.NonDeterministicFiniteAutomata
-import automata.commons.IdentifierAutomata.IdentifierState
+import automata.NDFARunner
 import automata.commons.{IdentifierAutomata, NumberAutomata, SpecialAutomata}
 import consumers.ConsumeLine._
-case class ConsumeCharNDFA[T >: NonDeterministicFiniteAutomata[_, _]](ndfa: T)
-class NDFAState[T]
+import event_machine.EventMachine.{Event, EventResult}
+
 object ConsumeChars {
 
-  case class NDFARun[Input, State](ndfa: NonDeterministicFiniteAutomata[Input, State], states: Set[State]) {
-    def run(input: Input): Set[State] = {
-      for {
-        state <- states
-        newStates <- ndfa.transition(state, input)
-      } yield newStates
-    }
-    def isAccepted: Boolean = {
-      states.exists(ndfa.acceptStates)
-    }
-  }
+  type ConsumeCharEvent = Event[AsciiChar, ConsumeCharState]
+  type ConsumeCharEventResult = EventResult[String, ConsumeCharState]
+  type CharNDFARunner = NDFARunner[Char, Any]
 
-  case class ConsumeCharOutput()
+  case class ConsumeCharState(ndfaRunner: Option[CharNDFARunner], accumulator: String = "") {
+    def push(c: Char): ConsumeCharState = copy(accumulator = accumulator + c)
 
-  case class ConsumeCharState[State](ndfaRun: Option[NDFARun[Char, State]], accumulator: String = "") {
-    def push(c: Char): ConsumeCharState[State] = copy(accumulator = accumulator + c)
-    def run(c: Char): ConsumeCharState[State] = ndfaRun match {
-      case Some(ndfaRunv) => ConsumeCharState(Some(NDFARun(ndfaRunv.ndfa, ndfaRunv.run(c))), accumulator).push(c)
+    def run(c: Char): ConsumeCharState = ndfaRunner match {
+      case Some(ndfaRunv) => ConsumeCharState(Some(NDFARunner(ndfaRunv.ndfa, ndfaRunv.run(c))), accumulator).push(c)
       case None => this
     }
   }
-  object ConsumeCharState {
-    def empty[State]: ConsumeCharState[State] = ConsumeCharState[State](None)
-  }
-  def apply[State, NewState](char: AsciiChar, state: ConsumeCharState[State]): (ConsumeCharState[NewState], Option[String]) = {
-    state.ndfaRun match {
-      case Some(id: NDFARun[Char, _]) =>
-        val newState: ConsumeCharState[State] = state.run(char.c)
 
-//        println(char.c, state.accumulator, newState.accumulator)
-        if (id.isAccepted && !newState.ndfaRun.forall(x => x.isAccepted)) {
-          val (newState, _) = apply[State, NewState](char, ConsumeCharState.empty[State])
-          newState -> Some(state.accumulator)
-        } else {
-          newState.asInstanceOf[ConsumeCharState[NewState]] -> None
-        }
-      case None =>
-        char.asciiCategory match {
-          case Letter =>
-            val run = NDFARun(IdentifierAutomata.IdentifierAutomata, Set(IdentifierAutomata.IdentifierAutomata.initialState))
-            apply(char, ConsumeCharState(Some(run)))
-          case Delimiter =>
-            ConsumeCharState.empty[NewState] -> Some(state.accumulator)
-          case Digit =>
-            val run = NDFARun(NumberAutomata.NumberAutomata, Set(NumberAutomata.NumberAutomata.initialState))
-            apply(char, ConsumeCharState(Some(run)))
-          case Special =>
-            val run = NDFARun(SpecialAutomata.SpecialAutomata, Set(SpecialAutomata.SpecialAutomata.initialState))
-            apply(char, ConsumeCharState(Some(run)))
-        }
+  object ConsumeCharState {
+    def empty: ConsumeCharState = ConsumeCharState(None)
+  }
+
+  private def runnerForAscii(ascii: AsciiChar): Option[CharNDFARunner] = {
+    ascii.asciiCategory match {
+      case Letter => Some(NDFARunner(IdentifierAutomata.IdentifierAutomata, Set(IdentifierAutomata.IdentifierAutomata.initialState)).asInstanceOf[CharNDFARunner])
+      case Delimiter => None
+      case Digit => Some(NDFARunner(NumberAutomata.NumberAutomata, Set(NumberAutomata.NumberAutomata.initialState)).asInstanceOf[CharNDFARunner])
+      case Special => Some(NDFARunner(SpecialAutomata.SpecialAutomata, Set(SpecialAutomata.SpecialAutomata.initialState)).asInstanceOf[CharNDFARunner])
+    }
+  }
+
+  private def stateForEvent(event: ConsumeCharEvent): ConsumeCharState = {
+    runnerForAscii(event.input) match {
+      case Some(runner) => ConsumeCharState(Some(runner))
+      case None => event.state
+    }
+  }
+
+  private def startNewNdfa(event: ConsumeCharEvent): ConsumeCharEventResult = {
+    runnerForAscii(event.input) match {
+      case Some(runner) => processNdfa(event.copy(state = ConsumeCharState(Some(runner))))
+      case None => EventResult.single(event.state.accumulator, event.state)
+    }
+  }
+
+  private def processNdfa(event: ConsumeCharEvent): ConsumeCharEventResult = {
+    val newState: ConsumeCharState = event.state.run(event.input.c)
+    if (event.state.ndfaRunner.forall(x => x.isAccepted) && !newState.ndfaRunner.forall(x => x.isAccepted)) {
+      EventResult.single(event.state.accumulator, stateForEvent(event))
+    } else {
+      EventResult.empty(newState) // Empty output
+    }
+  }
+
+  def apply(event: ConsumeCharEvent): ConsumeCharEventResult = {
+    event.state.ndfaRunner match {
+      // If are in the middle of a automate cycle
+      case Some(_: NDFARunner[Char, _]) => processNdfa(event)
+      // It's the first chars os a possible sequence, we need to start a new automata
+      case None => startNewNdfa(event)
     }
   }
 }
