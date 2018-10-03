@@ -6,7 +6,7 @@ class NonDeterministicFiniteAutomataTest extends WordSpec {
   "NonDeterministicFiniteAutomata" must {
     val ndfa = new NonDeterministicFiniteAutomata[Char, Int] {
       override val alphabet: Seq[Char] = CharAlphabets.Alphanumeric.toSeq
-      override val initialState: Int = 0
+      override val initialStates: Seq[Int] = Seq(0)
       override val states: Seq[Int] = Seq(0, 1, 2, 3, 4)
       override val acceptStates: Seq[Int] = Seq(3)
 
@@ -23,7 +23,7 @@ class NonDeterministicFiniteAutomataTest extends WordSpec {
 
     val ndfa2 = new NonDeterministicFiniteAutomata[Char, Int] {
       override val alphabet: Seq[Char] = CharAlphabets.Alphanumeric.toSeq
-      override val initialState: Int = 5
+      override val initialStates: Seq[Int] = Seq(5)
       override val states: Seq[Int] = Seq(6, 7, 8, 9)
       override val acceptStates: Seq[Int] = Seq(8)
 
@@ -54,6 +54,31 @@ class NonDeterministicFiniteAutomataTest extends WordSpec {
       assert(NonDeterministicFiniteAutomata.accepts(newNDFA, "abcdef"))
       assert(NonDeterministicFiniteAutomata.accepts(newNDFA, "abccdef"))
       assert(!NonDeterministicFiniteAutomata.accepts(newNDFA, "abddef"))
+    }
+
+    "or automata into (abc*|def)" in {
+      val newNDFA = NonDeterministicFiniteAutomata.or(ndfa, ndfa2)
+      assert(NonDeterministicFiniteAutomata.accepts(newNDFA, "abc"))
+      assert(NonDeterministicFiniteAutomata.accepts(newNDFA, "abcc"))
+      assert(NonDeterministicFiniteAutomata.accepts(newNDFA, "abccc"))
+      assert(!NonDeterministicFiniteAutomata.accepts(newNDFA, "abbccc"))
+      assert(NonDeterministicFiniteAutomata.accepts(newNDFA, "def"))
+      assert(!NonDeterministicFiniteAutomata.accepts(newNDFA, "deff"))
+    }
+
+    "repeat automata into (abc*)*" in {
+      val newNDFA = NonDeterministicFiniteAutomata.repeat(ndfa)
+      assert(NonDeterministicFiniteAutomata.accepts(newNDFA, "abc"))
+      assert(NonDeterministicFiniteAutomata.accepts(newNDFA, "abcc"))
+      assert(NonDeterministicFiniteAutomata.accepts(newNDFA, "abccc"))
+      assert(NonDeterministicFiniteAutomata.accepts(newNDFA, "abcabc"))
+      assert(NonDeterministicFiniteAutomata.accepts(newNDFA, "abcabcc"))
+      assert(NonDeterministicFiniteAutomata.accepts(newNDFA, "abccccabccc"))
+
+      assert(!NonDeterministicFiniteAutomata.accepts(newNDFA, "abcab"))
+      assert(!NonDeterministicFiniteAutomata.accepts(newNDFA, "abbccc"))
+      assert(!NonDeterministicFiniteAutomata.accepts(newNDFA, "def"))
+      assert(!NonDeterministicFiniteAutomata.accepts(newNDFA, "deff"))
     }
   }
 }

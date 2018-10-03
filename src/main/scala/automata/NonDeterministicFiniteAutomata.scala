@@ -2,15 +2,16 @@ package automata
 
 trait NonDeterministicFiniteAutomata[Symbol, +State] {
   val alphabet: Seq[Symbol]
-  val initialState: State
+  val initialStates: Seq[State]
   val states: Seq[State]
   val acceptStates: Seq[State]
+  def accepts[S >: State](states: Seq[S]): Boolean = states.exists(acceptStates.contains)
   def transition[S >: State](state: S, symbol: Symbol): Seq[State]
 }
 
 object NonDeterministicFiniteAutomata {
   def accepts[Symbol, State](nonDeterministicFiniteAutomata: NonDeterministicFiniteAutomata[Symbol, State], symbols: Seq[Symbol]): Boolean = {
-    symbols.foldLeft(Set(nonDeterministicFiniteAutomata.initialState)) { (states, symbol) =>
+    symbols.foldLeft(nonDeterministicFiniteAutomata.initialStates) { (states, symbol) =>
       for {
         state <- states
         newStates <- nonDeterministicFiniteAutomata.transition(state, symbol)
@@ -30,7 +31,7 @@ object NonDeterministicFiniteAutomata {
     require(ndfa1.states.intersect(ndfa2.states).isEmpty, "States must be disjoint")
     new NonDeterministicFiniteAutomata[Symbol, State] {
       override val alphabet: Seq[Symbol] = ndfa1.alphabet ++ ndfa2.alphabet
-      override val initialState: State = ndfa1.initialState
+      override val initialStates: Seq[State] = ndfa1.initialStates
       override val states: Seq[State] = ndfa1.states ++ ndfa1.states
       override val acceptStates: Seq[State] = ndfa2.acceptStates
 
@@ -38,12 +39,44 @@ object NonDeterministicFiniteAutomata {
         if(ndfa1.states.contains(state)) {
           val newStates = ndfa1.transition(state, symbol)
           if (newStates.exists(ndfa1.acceptStates.contains))
-            newStates :+ ndfa2.initialState
+            newStates ++ ndfa2.initialStates
           else
             newStates
         } else {
           ndfa2.transition(state, symbol)
         }
+      }
+    }
+  }
+
+  def or[Symbol, State](ndfa1: NonDeterministicFiniteAutomata[Symbol, State],
+                        ndfa2: NonDeterministicFiniteAutomata[Symbol, State]): NonDeterministicFiniteAutomata[Symbol, State] = {
+    new NonDeterministicFiniteAutomata[Symbol, State] {
+      override val alphabet: Seq[Symbol] = ndfa1.alphabet ++ ndfa2.alphabet
+      override val initialStates: Seq[State] = ndfa1.initialStates ++ ndfa2.initialStates
+      override val states: Seq[State] = ndfa1.states ++ ndfa1.states
+      override val acceptStates: Seq[State] = ndfa1.acceptStates ++ ndfa2.acceptStates
+
+      override def transition[S >: State](state: S, symbol: Symbol): Seq[State] = {
+        val newStatesNdfa1 = ndfa1.transition(state, symbol)
+        val newStatesNdfa2 = ndfa2.transition(state, symbol)
+        (newStatesNdfa1 ++ newStatesNdfa2).distinct
+      }
+    }
+  }
+
+  def repeat[Symbol, State](ndfa: NonDeterministicFiniteAutomata[Symbol, State]): NonDeterministicFiniteAutomata[Symbol, State] = {
+    new NonDeterministicFiniteAutomata[Symbol, State] {
+      override val alphabet: Seq[Symbol] = ndfa.alphabet
+      override val initialStates: Seq[State] = ndfa.initialStates
+      override val states: Seq[State] = ndfa.states
+      override val acceptStates: Seq[State] = ndfa.acceptStates
+
+      override def transition[S >: State](state: S, symbol: Symbol): Seq[State] = {
+        val newStatesNdfa = ndfa.transition(state, symbol)
+        if(ndfa.accepts(newStatesNdfa)) {
+          (newStatesNdfa ++ ndfa.initialStates).distinct
+        } else newStatesNdfa
       }
     }
   }

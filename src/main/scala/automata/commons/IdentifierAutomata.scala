@@ -12,7 +12,7 @@ object IdentifierState {
 
 object IdentifierAutomata extends NonDeterministicFiniteAutomata[Char, IdentifierState] {
   override val alphabet: Seq[Char] = CharAlphabets.Alphanumeric.toSeq
-  override val initialState: IdentifierState = IdentifierState.Start
+  override val initialStates: Seq[IdentifierState] = Seq(IdentifierState.Start)
   override val states: Seq[IdentifierState] = Seq(IdentifierState.Start, IdentifierState.Repeat, IdentifierState.NotIdentifier)
   override val acceptStates: Seq[IdentifierState] = Seq(IdentifierState.Repeat)
 

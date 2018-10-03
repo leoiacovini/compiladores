@@ -1,7 +1,7 @@
 package automata
 
-case class NDFARunner[Input, State](ndfa: NonDeterministicFiniteAutomata[Input, State], currentStates: Set[State]) {
-  def run(input: Input): Set[State] = {
+case class NDFARunner[Input, State](ndfa: NonDeterministicFiniteAutomata[Input, State], currentStates: Seq[State]) {
+  def run(input: Input): Seq[State] = {
     for {
       state <- currentStates
       newStates <- ndfa.transition(state, input)
