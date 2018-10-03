@@ -68,7 +68,7 @@ object NonDeterministicFiniteAutomata {
   def repeat[Symbol, State](ndfa: NonDeterministicFiniteAutomata[Symbol, State]): NonDeterministicFiniteAutomata[Symbol, State] = {
     new NonDeterministicFiniteAutomata[Symbol, State] {
       override val alphabet: Seq[Symbol] = ndfa.alphabet
-      override val initialStates: Seq[State] = ndfa.initialStates
+      override val initialStates: Seq[State] = ndfa.initialStates ++ ndfa.acceptStates
       override val states: Seq[State] = ndfa.states
       override val acceptStates: Seq[State] = ndfa.acceptStates
 

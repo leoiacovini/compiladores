@@ -68,6 +68,8 @@ class NonDeterministicFiniteAutomataTest extends WordSpec {
 
     "repeat automata into (abc*)*" in {
       val newNDFA = NonDeterministicFiniteAutomata.repeat(ndfa)
+
+      assert(NonDeterministicFiniteAutomata.accepts(newNDFA, ""))
       assert(NonDeterministicFiniteAutomata.accepts(newNDFA, "abc"))
       assert(NonDeterministicFiniteAutomata.accepts(newNDFA, "abcc"))
       assert(NonDeterministicFiniteAutomata.accepts(newNDFA, "abccc"))
