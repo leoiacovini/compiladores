@@ -13,7 +13,6 @@ object ConsumeChars {
 
   case class ConsumeCharState(ndfaRunner: Option[CharNDFARunner], accumulator: String = "") {
     def push(c: Char): ConsumeCharState = copy(accumulator = accumulator + c)
-
     def run(c: Char): ConsumeCharState = ndfaRunner match {
       case Some(ndfaRunv) => ConsumeCharState(Some(NDFARunner(ndfaRunv.ndfa, ndfaRunv.run(c))), accumulator).push(c)
       case None => this
