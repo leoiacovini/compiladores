@@ -1,24 +1,26 @@
 package automata.commons
 
+import automata.commons.IdentifierState.{IdentifierState, NotIdentifier}
 import automata.{CharAlphabets, NonDeterministicFiniteAutomata}
-
-object IdentifierAutomata {
+object IdentifierState {
   sealed trait IdentifierState
   case object Start extends IdentifierState
   case object Repeat extends IdentifierState
   case object NotIdentifier extends IdentifierState
-  val IdentifierAutomata: NonDeterministicFiniteAutomata[Char, IdentifierState] = new NonDeterministicFiniteAutomata[Char, IdentifierState] {
-    override val alphabet: Set[Char] = CharAlphabets.Alphanumeric
-    override val initialState: IdentifierState = Start
-    override val states: Set[IdentifierState] = Set(Start, Repeat, NotIdentifier)
-    override val acceptStates: Set[IdentifierState] = Set(Repeat)
 
-    override def transition(state: IdentifierState, symbol: Char): Set[IdentifierState] = {
-      (state, symbol) match {
-        case (Start, c) if c.isLetter => Set(Repeat)
-        case (Repeat, c) if c.isLetterOrDigit => Set(Repeat)
-        case _ => Set(NotIdentifier)
-      }
+}
+
+object IdentifierAutomata extends NonDeterministicFiniteAutomata[Char, IdentifierState] {
+  override val alphabet: Seq[Char] = CharAlphabets.Alphanumeric.toSeq
+  override val initialState: IdentifierState = IdentifierState.Start
+  override val states: Seq[IdentifierState] = Seq(IdentifierState.Start, IdentifierState.Repeat, IdentifierState.NotIdentifier)
+  override val acceptStates: Seq[IdentifierState] = Seq(IdentifierState.Repeat)
+
+  override def transition[S >: IdentifierState](state: S, symbol: Char): Seq[IdentifierState] = {
+    (state, symbol) match {
+      case (IdentifierState.Start, c) if c.isLetter => Seq(IdentifierState.Repeat)
+      case (IdentifierState.Repeat, c) if c.isLetterOrDigit => Seq(IdentifierState.Repeat)
+      case _ => Seq(NotIdentifier)
     }
   }
 }

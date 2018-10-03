@@ -25,10 +25,10 @@ object ConsumeChars {
 
   private def runnerForAscii(ascii: AsciiChar): Option[CharNDFARunner] = {
     ascii.asciiCategory match {
-      case Letter => Some(NDFARunner(IdentifierAutomata.IdentifierAutomata, Set(IdentifierAutomata.IdentifierAutomata.initialState)).asInstanceOf[CharNDFARunner])
+      case Letter => Some(NDFARunner(IdentifierAutomata, Set(IdentifierAutomata.initialState)))
       case Delimiter => None
-      case Digit => Some(NDFARunner(NumberAutomata.NumberAutomata, Set(NumberAutomata.NumberAutomata.initialState)).asInstanceOf[CharNDFARunner])
-      case Special => Some(NDFARunner(SpecialAutomata.SpecialAutomata, Set(SpecialAutomata.SpecialAutomata.initialState)).asInstanceOf[CharNDFARunner])
+      case Digit => Some(NDFARunner(NumberAutomata, Set(NumberAutomata.initialState)))
+      case Special => Some(NDFARunner(SpecialAutomata, Set(SpecialAutomata.initialState)))
     }
   }
 
