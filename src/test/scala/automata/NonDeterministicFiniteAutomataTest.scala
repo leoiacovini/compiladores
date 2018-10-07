@@ -82,5 +82,15 @@ class NonDeterministicFiniteAutomataTest extends WordSpec {
       assert(!NonDeterministicFiniteAutomata.accepts(newNDFA, "def"))
       assert(!NonDeterministicFiniteAutomata.accepts(newNDFA, "deff"))
     }
+
+    "fromSeq" in {
+      val ndfa = NonDeterministicFiniteAutomata.fromSeq("abcd")
+
+      assert(!NonDeterministicFiniteAutomata.accepts(ndfa, ""))
+      assert(!NonDeterministicFiniteAutomata.accepts(ndfa, "abc"))
+      assert(!NonDeterministicFiniteAutomata.accepts(ndfa, "abcc"))
+      assert(NonDeterministicFiniteAutomata.accepts(ndfa, "abcd"))
+
+    }
   }
 }

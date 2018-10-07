@@ -10,6 +10,24 @@ trait NonDeterministicFiniteAutomata[Symbol, +State] {
 }
 
 object NonDeterministicFiniteAutomata {
+
+  def fromSeq[Symbol](symbols: Seq[Symbol]): NonDeterministicFiniteAutomata[Symbol, Int] = {
+    require(symbols.nonEmpty, "Cant create a ndfa for a empty seq")
+    new NonDeterministicFiniteAutomata[Symbol, Int] {
+      override val alphabet: Seq[Symbol] = symbols.distinct
+      override val initialStates: Seq[Int] = Seq(0)
+      override val states: Seq[Int] = 0 to symbols.length
+      override val acceptStates: Seq[Int] = Seq(symbols.length)
+
+      override def transition[S >: Int](state: S, symbol: Symbol): Seq[Int] = {
+        state match {
+          case sta: Int if symbols.lift(sta).contains(symbol) => Seq(sta+1)
+          case _ => Seq.empty
+        }
+      }
+    }
+  }
+
   def accepts[Symbol, State](nonDeterministicFiniteAutomata: NonDeterministicFiniteAutomata[Symbol, State], symbols: Seq[Symbol]): Boolean = {
     symbols.foldLeft(nonDeterministicFiniteAutomata.initialStates) { (states, symbol) =>
       for {
