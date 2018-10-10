@@ -1,5 +1,6 @@
 package automata
 
+import automata.dpa.{DPARunner, DeterministicPushdownAutomata}
 import org.scalatest.WordSpec
 
 class DeterministicPushdownAutomataTest extends WordSpec {

@@ -1,24 +1,5 @@
-package automata
+package automata.ndfa
 
-
-object NDFARunner {
-  def fromNDFA[Input, State](ndfa: NonDeterministicFiniteAutomata[Input, State]): NDFARunner[Input, State] = {
-    NDFARunner(ndfa, ndfa.initialStates)
-  }
-}
-case class NDFARunner[Input, State](ndfa: NonDeterministicFiniteAutomata[Input, State], currentStates: Seq[State]) {
-  def run(input: Input): Seq[State] = {
-    for {
-      state <- currentStates
-      newStates <- ndfa.transition(state, input)
-    } yield newStates
-  }
-
-  def withStates(newStates: Seq[State]): NDFARunner[Input, State] = copy(currentStates = newStates)
-  def isAccepted: Boolean = {
-    currentStates.exists(ndfa.acceptStates.contains)
-  }
-}
 object NDFAStack {
   def accepts[Input, State, MachineIdentifier](ndfaStack: NDFAStack[Input, State, MachineIdentifier], symbols: Seq[Input]): Boolean = {
     symbols.foldLeft(ndfaStack) {case (stack, symbol) =>
@@ -26,6 +7,7 @@ object NDFAStack {
     }.isAccepted
   }
 }
+
 case class NDFAStack[Input, State, MachineIdentifier](ndfaMap: Map[MachineIdentifier, NonDeterministicFiniteAutomata[Input, State]],
                                                       submachineCalls: PartialFunction[(MachineIdentifier, State, Input), (MachineIdentifier, State)],
                                                       stack: Seq[(MachineIdentifier, NDFARunner[Input, State])]) {

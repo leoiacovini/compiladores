@@ -1,7 +1,7 @@
 package consumers
 
-import automata.NDFARunner
 import automata.commons.{IdentifierAutomata, NumberAutomata, SpecialAutomata}
+import automata.ndfa.NDFARunner
 import consumers.ConsumeLine._
 import event_machine.EventMachine.{Event, EventResult}
 

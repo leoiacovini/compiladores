@@ -1,7 +1,8 @@
 package automata.commons
 
 import automata.commons.NumberState.NumberState
-import automata.{CharAlphabets, NonDeterministicFiniteAutomata}
+import automata.CharAlphabets
+import automata.ndfa.NonDeterministicFiniteAutomata
 object NumberState {
   sealed trait NumberState
   case object Start extends NumberState

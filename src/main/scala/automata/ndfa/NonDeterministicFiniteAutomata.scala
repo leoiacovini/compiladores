@@ -1,4 +1,4 @@
-package automata
+package automata.ndfa
 
 trait NonDeterministicFiniteAutomata[Symbol, +State] {
   val alphabet: Seq[Symbol]

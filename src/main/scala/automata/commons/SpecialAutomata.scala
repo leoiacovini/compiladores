@@ -1,7 +1,8 @@
 package automata.commons
 
 import automata.commons.SpecialState.SpecialState
-import automata.{CharAlphabets, NonDeterministicFiniteAutomata}
+import automata.CharAlphabets
+import automata.ndfa.NonDeterministicFiniteAutomata
 
 object SpecialState {
 

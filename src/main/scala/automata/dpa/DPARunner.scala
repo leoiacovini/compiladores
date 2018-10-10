@@ -1,18 +1,6 @@
-package automata
+package automata.dpa
 
-import scala.util.{Failure, Success, Try}
 
-trait DeterministicPushdownAutomata[InputSymbol, StackSymbol, +State] {
-  val inputAlphabet: Seq[InputSymbol]
-  val stackAlphabet: Seq[StackSymbol]
-  val initialStackSymbol: StackSymbol
-  val initialState: State
-  val states: Seq[State]
-  val acceptStates: Seq[State]
-  val trapState: State
-  def accepts[S >: State](state: S): Boolean = acceptStates.contains(state)
-  def transition[S >: State](state: S, inputSymbolOpt: Option[InputSymbol], stackSymbol: StackSymbol): (S, Seq[StackSymbol])
-}
 
 case class DPARunner[InputSymbol ,StackSymbol, State](dpa: DeterministicPushdownAutomata[InputSymbol, StackSymbol, State],
                                                       currentState: State,

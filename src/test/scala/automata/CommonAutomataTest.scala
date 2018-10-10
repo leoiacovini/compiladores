@@ -1,6 +1,7 @@
 package automata
 
-import automata.commons.{NumberAutomata,IdentifierAutomata, SpecialAutomata}
+import automata.commons.{IdentifierAutomata, NumberAutomata, SpecialAutomata}
+import automata.ndfa.NonDeterministicFiniteAutomata
 import org.scalatest.WordSpec
 
 class CommonAutomataTest extends WordSpec {

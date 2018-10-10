@@ -1,5 +1,6 @@
 package automata
 
+import automata.ndfa.NonDeterministicFiniteAutomata
 import org.scalatest._
 
 class NonDeterministicFiniteAutomataTest extends WordSpec {

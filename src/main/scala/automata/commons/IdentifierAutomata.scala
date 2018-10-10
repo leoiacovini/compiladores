@@ -1,7 +1,8 @@
 package automata.commons
 
 import automata.commons.IdentifierState.{IdentifierState, NotIdentifier}
-import automata.{CharAlphabets, NonDeterministicFiniteAutomata}
+import automata.CharAlphabets
+import automata.ndfa.NonDeterministicFiniteAutomata
 object IdentifierState {
   sealed trait IdentifierState
   case object Start extends IdentifierState
