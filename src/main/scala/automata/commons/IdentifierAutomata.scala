@@ -1,7 +1,8 @@
 package automata.commons
 
 import automata.commons.IdentifierState.{IdentifierState, NotIdentifier}
-import automata.{CharAlphabets, NonDeterministicFiniteAutomata}
+import automata.CharAlphabets
+import automata.ndfa.NonDeterministicFiniteAutomata
 object IdentifierState {
   sealed trait IdentifierState
   case object Start extends IdentifierState
@@ -12,7 +13,7 @@ object IdentifierState {
 
 object IdentifierAutomata extends NonDeterministicFiniteAutomata[Char, IdentifierState] {
   override val alphabet: Seq[Char] = CharAlphabets.Alphanumeric.toSeq
-  override val initialState: IdentifierState = IdentifierState.Start
+  override val initialStates: Seq[IdentifierState] = Seq(IdentifierState.Start)
   override val states: Seq[IdentifierState] = Seq(IdentifierState.Start, IdentifierState.Repeat, IdentifierState.NotIdentifier)
   override val acceptStates: Seq[IdentifierState] = Seq(IdentifierState.Repeat)
 

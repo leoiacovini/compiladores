@@ -1,7 +1,8 @@
 package automata.commons
 
 import automata.commons.SpecialState.SpecialState
-import automata.{CharAlphabets, NonDeterministicFiniteAutomata}
+import automata.CharAlphabets
+import automata.ndfa.NonDeterministicFiniteAutomata
 
 object SpecialState {
 
@@ -16,7 +17,7 @@ object SpecialState {
 object SpecialAutomata extends NonDeterministicFiniteAutomata[Char, SpecialState] {
 
   override val alphabet: Seq[Char] = (CharAlphabets.Special ++ CharAlphabets.Alphanumeric).toSeq
-  override val initialState: SpecialState = SpecialState.Start
+  override val initialStates: Seq[SpecialState] = Seq(SpecialState.Start)
   override val states: Seq[SpecialState] = Seq(SpecialState.Start, SpecialState.MaybeDone('>'), SpecialState.MaybeDone('<'), SpecialState.Done, SpecialState.NotSpecial)
   override val acceptStates: Seq[SpecialState] = Seq(SpecialState.Done, SpecialState.MaybeDone('>'), SpecialState.MaybeDone('<'))
 
