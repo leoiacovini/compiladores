@@ -20,7 +20,7 @@ case class NDPARunner[InputSymbol, StackSymbol, State](ndpa: NonDeterministicPus
   def runAll(seqInput: Seq[InputSymbol]): NDPARunner[InputSymbol, StackSymbol, State] = {
     seqInput.foldLeft(this) {
       case (runner, input) =>
-        //        println(s"$input -> $runner")
+//        println(s"$input -> $runner")
         runner.run(Some(input))
     }
   }
