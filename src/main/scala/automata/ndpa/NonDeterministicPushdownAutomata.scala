@@ -1,7 +1,5 @@
 package automata.ndpa
 
-import automata.CharAlphabets
-
 trait NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, +State] {
   val inputAlphabet: Seq[InputSymbol]
   val stackAlphabet: Seq[StackSymbol]
@@ -11,7 +9,7 @@ trait NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, +State] {
   val acceptStates: Seq[State]
   val trapState: State
 //  def accepts[S >: State](state: S): Boolean = acceptStates.contains(state)
-  def transition[S >: State](state: S, inputSymbolOpt: Option[InputSymbol], stackSymbolOpt: Option[StackSymbol]): (S, Seq[StackSymbol])
+  def transition[S >: State](state: S, inputSymbolOpt: Option[InputSymbol], stackSymbolOpt: Option[StackSymbol]): Seq[(S, Seq[StackSymbol])]
 }
 
 object NonDeterministicPushdownAutomata {
@@ -29,10 +27,9 @@ object NonDeterministicPushdownAutomata {
       override val acceptStates: Seq[State] = ndpa2.acceptStates
       override val trapState: State = ndpa1.trapState
 
-      override def transition[S >: State](state: S, inputSymbolOpt: Option[InputSymbol], stackSymbolOpt: Option[StackSymbol]): (S, Seq[StackSymbol]) = {
+      override def transition[S >: State](state: S, inputSymbolOpt: Option[InputSymbol], stackSymbolOpt: Option[StackSymbol]): Seq[(S, Seq[StackSymbol])] = {
         (inputSymbolOpt, stackSymbolOpt) match {
-          case (None, None) if ndpa1.acceptStates.contains(state) =>
-            (ndpa2.initialState, Seq(ndpa2.initialStackSymbol))
+          case (None, None) if ndpa1.acceptStates.contains(state) => ndpa1.transition(state, None, None) :+ (ndpa2.initialState, Seq(ndpa2.initialStackSymbol))
           case _ if ndpa1.states.contains(state) => ndpa1.transition(state, inputSymbolOpt, stackSymbolOpt)
           case _ if ndpa2.states.contains(state) => ndpa2.transition(state, inputSymbolOpt, stackSymbolOpt)
         }
@@ -53,10 +50,10 @@ object NonDeterministicPushdownAutomata {
       override val acceptStates: Seq[State] = ndpa1.acceptStates ++ ndpa2.acceptStates
       override val trapState: State = ndpa1.trapState
 
-      override def transition[S >: State](state: S, inputSymbolOpt: Option[InputSymbol], stackSymbolOpt: Option[StackSymbol]): (S, Seq[StackSymbol]) = {
+      override def transition[S >: State](state: S, inputSymbolOpt: Option[InputSymbol], stackSymbolOpt: Option[StackSymbol]): Seq[(S, Seq[StackSymbol])] = {
         (inputSymbolOpt, stackSymbolOpt) match {
           case (None, Some(ndpa1.initialStackSymbol)) if ndpa1.initialState == state =>
-            (ndpa2.initialState, Seq(ndpa2.initialStackSymbol))
+            Seq((ndpa2.initialState, Seq(ndpa2.initialStackSymbol)))
           case _ if ndpa1.states.contains(state) => ndpa1.transition(state, inputSymbolOpt, stackSymbolOpt)
           case _ if ndpa2.states.contains(state) => ndpa2.transition(state, inputSymbolOpt, stackSymbolOpt)
         }
@@ -74,11 +71,11 @@ object NonDeterministicPushdownAutomata {
       override val acceptStates: Seq[State] = ndpa.acceptStates
       override val trapState: State = ndpa.trapState
 
-      override def transition[S >: State](state: S, inputSymbolOpt: Option[InputSymbol], stackSymbolOpt: Option[StackSymbol]): (S, Seq[StackSymbol]) = {
+      override def transition[S >: State](state: S, inputSymbolOpt: Option[InputSymbol], stackSymbolOpt: Option[StackSymbol]): Seq[(S, Seq[StackSymbol])] = {
         (state, inputSymbolOpt, stackSymbolOpt) match {
-          case (ndpa.initialState, None, Some(ndpa.initialStackSymbol)) => (ndpa.acceptStates.head, Seq.empty)
+          case (ndpa.initialState, None, Some(ndpa.initialStackSymbol)) => Seq((ndpa.acceptStates.head, Seq.empty))
           case (s, None, None) if ndpa.acceptStates.contains(s) =>
-            (ndpa.initialState, Seq(ndpa.initialStackSymbol))
+            Seq((ndpa.initialState, Seq(ndpa.initialStackSymbol)))
           case _ => ndpa.transition(state, inputSymbolOpt, stackSymbolOpt)
         }
       }
