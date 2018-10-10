@@ -31,6 +31,7 @@ class NonDeterministicPushdownAutomataTest extends WordSpec {
             case (State1, Some('a'), Some('a')) => Seq((State1, Seq.empty))
             case (State1, Some('b'), Some('b')) => Seq((State1, Seq.empty))
             case (State1, None, Some('$')) => Seq((End, Seq.empty))
+            case _ => Seq.empty
           }
         }
       }
@@ -74,6 +75,7 @@ class NonDeterministicPushdownAutomataTest extends WordSpec {
             case (State2, None, None) => Seq((State3, Seq.empty))
             case (State3, None, Some('a')) => Seq((State4, Seq.empty))
             case (State4, None, Some('$')) => Seq((End, Seq.empty))
+            case _ => Seq.empty
           }
         }
       }
@@ -100,7 +102,7 @@ class NonDeterministicPushdownAutomataTest extends WordSpec {
         override val stackAlphabet: Seq[Char] = CharAlphabets.Alphanumeric.toSeq
         override val initialStackSymbol: Char = '$'
         override val initialState: PDAState= Initial
-        override val states: Seq[PDAState] = Seq(Initial, State1, State2, End)
+        override val states: Seq[PDAState] = Seq(Initial, State1, State2, Error, End)
         override val acceptStates: Seq[PDAState] = Seq(End)
         override val trapState: PDAState = Error
 
@@ -110,6 +112,7 @@ class NonDeterministicPushdownAutomataTest extends WordSpec {
             case (Initial, Some('b'), Some('a')) => Seq((State1, Seq.empty))
             case (State1, Some('b'), Some('a')) => Seq((State1, Seq.empty))
             case (State1, None, Some('$')) => Seq((End, Seq.empty))
+            case _ => Seq.empty
           }
         }
       }
@@ -119,7 +122,7 @@ class NonDeterministicPushdownAutomataTest extends WordSpec {
         override val stackAlphabet: Seq[Char] = CharAlphabets.Alphanumeric.toSeq
         override val initialStackSymbol: Char = '$'
         override val initialState: PDAState= Initial2
-        override val states: Seq[PDAState] = Seq(Initial2, End2)
+        override val states: Seq[PDAState] = Seq(Initial2, Error2, End2)
         override val acceptStates: Seq[PDAState] = Seq(End2)
         override val trapState: PDAState = Error2
 
@@ -128,6 +131,7 @@ class NonDeterministicPushdownAutomataTest extends WordSpec {
             case (Initial2, Some('c'), Some('$')) => Seq((End2, Seq.empty))
             case (_, Some(_), Some(stackSymbol)) => Seq((Error2, Seq(stackSymbol)))
             case (_, Some(_), None) => Seq((Error2, Seq.empty))
+            case _ => Seq.empty
           }
         }
       }
