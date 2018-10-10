@@ -2,10 +2,7 @@ package automata.ndpa
 
 import scala.util.Try
 
-
-
-
-case class NDPARunner[InputSymbol ,StackSymbol, State](ndpa: NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, State],
+case class NDPARunner[InputSymbol, StackSymbol, State](ndpa: NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, State],
                                                        current: Seq[NDPARunState[State, StackSymbol]]) {
 
   def fail(): NDPARunner[InputSymbol, StackSymbol, State] = copy(current = Seq(current.head.withState(ndpa.trapState)))
@@ -14,22 +11,28 @@ case class NDPARunner[InputSymbol ,StackSymbol, State](ndpa: NonDeterministicPus
   def run(input: Option[InputSymbol]): NDPARunner[InputSymbol, StackSymbol, State] = {
 
     val newRunStates = current.map { currentRunState =>
-      Try { currentRunState.popStack().applyTransitionResult(ndpa.transition(currentRunState.state, input, currentRunState.stack.headOption)) }
+      Try {
+        currentRunState
+          .popStack()
+          .applyTransitionResult(ndpa.transition(currentRunState.state, input, currentRunState.stack.headOption))
+      }
     }.filter(_.isSuccess)
       .map(_.get)
       .flatMap { newRunState =>
         val seq = NDPARunner.runEmptyTransitions(ndpa, Seq(newRunState))
-        seq }
+        seq
+      }
     copy(current = newRunStates)
   }
 
   def runAll(seqInput: Seq[InputSymbol]): NDPARunner[InputSymbol, StackSymbol, State] = {
     seqInput.foldLeft(this) {
       case (runner, input) =>
-//        println(s"$input -> $runner")
+        //        println(s"$input -> $runner")
         runner.run(Some(input))
     }
   }
+
   def accepts(symbols: Seq[InputSymbol]): Boolean = {
     runAll(symbols).isAccepted
   }
@@ -45,10 +48,11 @@ case class NDPARunner[InputSymbol ,StackSymbol, State](ndpa: NonDeterministicPus
 }
 
 object NDPARunner {
-  def fromNDPA[InputSymbol ,StackSymbol, State](ndpa: NonDeterministicPushdownAutomata[InputSymbol ,StackSymbol, State]): NDPARunner[InputSymbol ,StackSymbol, State] = {
+  def fromNDPA[InputSymbol, StackSymbol, State](ndpa: NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, State]): NDPARunner[InputSymbol, StackSymbol, State] = {
     val initialCurrent = runEmptyTransitions(ndpa, Seq(NDPARunState(ndpa.initialState, Seq(ndpa.initialStackSymbol))))
     NDPARunner(ndpa, initialCurrent)
   }
+
   def runEmptyTransitions[InputSymbol, StackSymbol, State](ndpa: NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, State], runStates: Seq[NDPARunState[State, StackSymbol]]): Seq[NDPARunState[State, StackSymbol]] = {
     runStates.flatMap { runState =>
       val emptyTransitionRunState = Try {

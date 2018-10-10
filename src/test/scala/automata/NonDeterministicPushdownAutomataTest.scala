@@ -23,14 +23,14 @@ class NonDeterministicPushdownAutomataTest extends WordSpec {
         override val acceptStates: Seq[PDAState] = Seq(End)
         override val trapState: PDAState = Error
 
-        override def transition[S >: PDAState](state: S, inputSymbolOpt: Option[Char], stackSymbolOpt: Option[Char]): (S, Seq[Char]) = {
+        override def transition[S >: PDAState](state: S, inputSymbolOpt: Option[Char], stackSymbolOpt: Option[Char]): Seq[(S, Seq[Char])] = {
           (state, inputSymbolOpt, stackSymbolOpt) match {
-            case (Initial, Some('a'), Some(stackSymbol)) => (Initial, Seq('a', stackSymbol))
-            case (Initial, Some('b'), Some(stackSymbol)) => (Initial, Seq('b', stackSymbol))
-            case (Initial, None, None) => (State1, Seq.empty)
-            case (State1, Some('a'), Some('a')) => (State1, Seq.empty)
-            case (State1, Some('b'), Some('b')) => (State1, Seq.empty)
-            case (State1, None, Some('$')) => (End, Seq.empty)
+            case (Initial, Some('a'), Some(stackSymbol)) => Seq((Initial, Seq('a', stackSymbol)))
+            case (Initial, Some('b'), Some(stackSymbol)) => Seq((Initial, Seq('b', stackSymbol)))
+            case (Initial, None, None) => Seq((State1, Seq.empty))
+            case (State1, Some('a'), Some('a')) => Seq((State1, Seq.empty))
+            case (State1, Some('b'), Some('b')) => Seq((State1, Seq.empty))
+            case (State1, None, Some('$')) => Seq((End, Seq.empty))
           }
         }
       }
@@ -67,13 +67,13 @@ class NonDeterministicPushdownAutomataTest extends WordSpec {
         override val acceptStates: Seq[PDAState] = Seq(End)
         override val trapState: PDAState = Error
 
-        override def transition[S >: PDAState](state: S, inputSymbolOpt: Option[Char], stackSymbolOpt: Option[Char]): (S, Seq[Char]) = {
+        override def transition[S >: PDAState](state: S, inputSymbolOpt: Option[Char], stackSymbolOpt: Option[Char]): Seq[(S, Seq[Char])] = {
           (state, inputSymbolOpt, stackSymbolOpt) match {
-            case (Initial, Some('a'), Some(stackSymbol)) => (State1, Seq('a', stackSymbol))
-            case (State1, None, None) => (State2, Seq.empty)
-            case (State2, None, None) => (State3, Seq.empty)
-            case (State3, None, Some('a')) => (State4, Seq.empty)
-            case (State4, None, Some('$')) => (End, Seq.empty)
+            case (Initial, Some('a'), Some(stackSymbol)) => Seq((State1, Seq('a', stackSymbol)))
+            case (State1, None, None) => Seq((State2, Seq.empty))
+            case (State2, None, None) => Seq((State3, Seq.empty))
+            case (State3, None, Some('a')) => Seq((State4, Seq.empty))
+            case (State4, None, Some('$')) => Seq((End, Seq.empty))
           }
         }
       }
@@ -104,12 +104,12 @@ class NonDeterministicPushdownAutomataTest extends WordSpec {
         override val acceptStates: Seq[PDAState] = Seq(End)
         override val trapState: PDAState = Error
 
-        override def transition[S >: PDAState](state: S, inputSymbolOpt: Option[Char], stackSymbolOpt: Option[Char]): (S, Seq[Char]) = {
+        override def transition[S >: PDAState](state: S, inputSymbolOpt: Option[Char], stackSymbolOpt: Option[Char]): Seq[(S, Seq[Char])] = {
           (state, inputSymbolOpt, stackSymbolOpt) match {
-            case (Initial, Some('a'), Some(stackSymbol)) => (Initial, Seq('a', stackSymbol))
-            case (Initial, Some('b'), Some('a')) => (State1, Seq.empty)
-            case (State1, Some('b'), Some('a')) => (State1, Seq.empty)
-            case (State1, None, Some('$')) => (End, Seq.empty)
+            case (Initial, Some('a'), Some(stackSymbol)) => Seq((Initial, Seq('a', stackSymbol)))
+            case (Initial, Some('b'), Some('a')) => Seq((State1, Seq.empty))
+            case (State1, Some('b'), Some('a')) => Seq((State1, Seq.empty))
+            case (State1, None, Some('$')) => Seq((End, Seq.empty))
           }
         }
       }
@@ -123,11 +123,11 @@ class NonDeterministicPushdownAutomataTest extends WordSpec {
         override val acceptStates: Seq[PDAState] = Seq(End2)
         override val trapState: PDAState = Error2
 
-        override def transition[S >: PDAState](state: S, inputSymbolOpt: Option[Char], stackSymbolOpt: Option[Char]): (S, Seq[Char]) = {
+        override def transition[S >: PDAState](state: S, inputSymbolOpt: Option[Char], stackSymbolOpt: Option[Char]): Seq[(S, Seq[Char])] = {
           (state, inputSymbolOpt, stackSymbolOpt) match {
-            case (Initial2, Some('c'), Some('$')) => (End2, Seq.empty)
-            case (_, Some(_), Some(stackSymbol)) => (Error2, Seq(stackSymbol))
-            case (_, Some(_), None) => (Error2, Seq.empty)
+            case (Initial2, Some('c'), Some('$')) => Seq((End2, Seq.empty))
+            case (_, Some(_), Some(stackSymbol)) => Seq((Error2, Seq(stackSymbol)))
+            case (_, Some(_), None) => Seq((Error2, Seq.empty))
           }
         }
       }
