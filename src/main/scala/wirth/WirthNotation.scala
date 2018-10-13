@@ -76,3 +76,17 @@ case class WirthGrammar() extends NonDeterministicPushdownAutomata[WirthStuff, C
     }
   }
 }
+
+
+trait WirthAST
+trait Expression extends WirthAST
+case class ExpressionParentesis(exp: Expression) extends Expression
+case class ExpressionBrackets(exp: Expression) extends Expression
+case class ExpressionKleene(exp: Expression) extends Expression
+trait Token extends WirthAST
+case class NonTerminalToken(nonTerminal: NonTerminal)
+case class TerminalToken(terminal: Terminal)
+case class Sequence(tokens: Token*)
+case class Or(expressions: Expression*) extends Expression
+case class Rule(nonTerminal: NonTerminal, expression: Expression) extends WirthAST
+case class Grammar(rules: Rule*) extends WirthAST

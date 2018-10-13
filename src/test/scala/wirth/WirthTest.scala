@@ -2,6 +2,7 @@ package wirth
 
 import automata.ndpa.NDPARunner
 import org.scalatest.WordSpec
+import wirth.WirthNotation.{ExpressionInitial, ExpressionRecognized}
 
 class WirthTest extends WordSpec {
   "WirthExpression" must {
@@ -44,6 +45,17 @@ class WirthTest extends WordSpec {
 
       assert(runner.rejects(NonTerminal("a") :: Special("=") :: Terminal("foo") :: Special("|") :: Special(".") :: Nil))
 
+    }
+
+    "foo" in {
+      Seq(
+        (ExpressionInitial, Some(Special("(")), Some('$'))
+          (ExpressionInitial, Some(NonTerminal("foo")), Some('('))
+          (ExpressionRecognized, Some(Special("|")), Some('('))
+          (ExpressionInitial, Some(NonTerminal("bar")), Some('('))
+          (ExpressionRecognized, Some(Special(")")), Some('('))
+          (ExpressionRecognized, None, Some('$'))
+      )
     }
   }
 }
