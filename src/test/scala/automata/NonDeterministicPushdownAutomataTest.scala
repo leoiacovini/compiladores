@@ -85,6 +85,52 @@ class NonDeterministicPushdownAutomataTest extends WordSpec {
 
       assert(runner.accepts("a"))
     }
+    "builder" in {
+      import NonDeterministicPushdownAutomata.NDPABuilder
+      sealed trait PDAState
+      case object NewInitial extends PDAState
+      case object Initial extends PDAState
+      case object State1 extends PDAState
+      case object State2 extends PDAState
+      case object State3 extends PDAState
+      case object State4 extends PDAState
+      case object End extends PDAState
+      case object Error extends PDAState
+
+      val ndpa: NonDeterministicPushdownAutomata[Char, Char, PDAState] = new NonDeterministicPushdownAutomata[Char, Char, PDAState] {
+        override val inputAlphabet: Seq[Char] = CharAlphabets.Alphanumeric.toSeq
+        override val stackAlphabet: Seq[Char] = CharAlphabets.Alphanumeric.toSeq
+        override val initialStackSymbol: Char = '$'
+        override val initialState: PDAState= Initial
+        override val states: Seq[PDAState] = Seq(Initial, State1, State2, State3, End)
+        override val acceptStates: Seq[PDAState] = Seq(End)
+        override val trapState: PDAState = Error
+
+        override def transition[S >: PDAState](state: S, inputSymbolOpt: Option[Char], stackSymbolOpt: Option[Char]): Seq[(S, Seq[Char])] = {
+          (state, inputSymbolOpt, stackSymbolOpt) match {
+            case (Initial, Some('a'), Some(stackSymbol)) => Seq((State1, Seq('a', stackSymbol)))
+            case (State1, None, None) => Seq((State2, Seq.empty))
+            case (State2, None, None) => Seq((State3, Seq.empty))
+            case (State3, None, Some('a')) => Seq((State4, Seq.empty))
+            case _ => Seq.empty
+          }
+        }
+      }
+
+      val newNDPA = ndpa.addTransition(State4, None, Some('$'), Seq((End, Seq.empty)))
+      val newNDPA2 =
+        ndpa
+          .addTransition(State4, None, Some('$'), Seq((End, Seq.empty)))
+          .replaceInitialState(NewInitial)
+          .addTransition(NewInitial, None, None, Seq((Initial, Seq.empty)))
+      val newRunner = NDPARunner.fromNDPA(newNDPA)
+      val newRunner2 = NDPARunner.fromNDPA(newNDPA2)
+      val oldRunner = NDPARunner.fromNDPA(ndpa)
+
+      assert(oldRunner.rejects("a"))
+      assert(newRunner.accepts("a"))
+      assert(newRunner2.accepts("a"))
+    }
 
     "concat, or and kleene" in {
       sealed trait PDAState
