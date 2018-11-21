@@ -2,11 +2,20 @@ package automata.ndpa
 
 import automata.SeqStack
 
-case class NDPARunState[State, StackSymbol](state: State, stack: Seq[StackSymbol]) {
-  import SeqStack._
-  def withState(newState: State): NDPARunState[State, StackSymbol] = copy(state = newState)
+case class RunHistoryItem[State, InputSymbol, StackSymbol](fromState: State, toState: State, newStackSymbols: Seq[StackSymbol], inputSymbolOpt: Option[InputSymbol], stackSymbolOpt: Option[StackSymbol]) {
 
-  def popStack(): NDPARunState[State, StackSymbol] = copy(stack = new SeqStack(stack).pop())
-  def applyTransitionResult(transitionResult: (State, Seq[StackSymbol])): NDPARunState[State, StackSymbol] =
-    this.withState(transitionResult._1).copy(stack = new SeqStack(stack).push(transitionResult._2))
+  def debugString: String = {
+    s"""$fromState, $inputSymbolOpt, $stackSymbolOpt -> $toState, $newStackSymbols"""
+  }
+}
+case class NDPARunState[State, InputSymbol, StackSymbol](state: State, stack: Seq[StackSymbol], history: Seq[RunHistoryItem[State, InputSymbol, StackSymbol]]) {
+  import SeqStack._
+  def withState(newState: State): NDPARunState[State, InputSymbol, StackSymbol] = copy(state = newState)
+  def pushHistoryItem(runHistoryItem: RunHistoryItem[State, InputSymbol, StackSymbol]): NDPARunState[State, InputSymbol, StackSymbol] = copy(history = history :+ runHistoryItem)
+  def popStack(): NDPARunState[State, InputSymbol, StackSymbol] = copy(stack = new SeqStack(stack).pop())
+  def applyTransitionResult(inputSymbolOpt:Option[InputSymbol], stackSymbolOpt: Option[StackSymbol], transitionResult: (State, Seq[StackSymbol])): NDPARunState[State, InputSymbol, StackSymbol] =
+    this
+      .withState(transitionResult._1)
+      .copy(stack = new SeqStack(stack).push(transitionResult._2))
+      .pushHistoryItem(RunHistoryItem(state, transitionResult._1, transitionResult._2, inputSymbolOpt, stackSymbolOpt))
 }

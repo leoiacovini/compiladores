@@ -3,6 +3,7 @@ package automata.ndpa
 import wirth.WirthToNDPA.StackAlphabet
 
 trait NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, +State] {
+  val id: String = "common-id"
   val inputAlphabet: Seq[InputSymbol]
   val stackAlphabet: Seq[StackSymbol]
   val initialStackSymbol: StackSymbol
@@ -12,7 +13,6 @@ trait NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, +State] {
   val trapState: State
 //  def accepts[S >: State](state: S): Boolean = acceptStates.contains(state)
   def transition[S >: State](state: S, inputSymbolOpt: Option[InputSymbol], stackSymbolOpt: Option[StackSymbol]): Seq[(S, Seq[StackSymbol])]
-
   def copy[S >: State](newInputAlphabet: Seq[InputSymbol] = inputAlphabet,
                        newStackAlphabet: Seq[StackSymbol] = stackAlphabet,
                        newInitialStackSymbol: StackSymbol = initialStackSymbol,
@@ -20,6 +20,7 @@ trait NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, +State] {
                        newStates: Seq[S] = states,
                        newAcceptStates: Seq[S] = acceptStates,
                        newTrapState: S = trapState,
+                       newId: String = id,
                        newTransition: (S, Option[InputSymbol], Option[StackSymbol]) => Seq[(S, Seq[StackSymbol])] = this.transition _) = new NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, S] {
     override val inputAlphabet: Seq[InputSymbol] = newInputAlphabet
     override val stackAlphabet: Seq[StackSymbol] = newStackAlphabet
@@ -41,6 +42,20 @@ trait NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, +State] {
 }
 
 object NonDeterministicPushdownAutomata {
+  def printTransitions[InputSymbol, StackSymbol, State](ndpa: NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, State],
+                                                        tries: Seq[(State, Option[InputSymbol], Option[StackSymbol])]): Unit = {
+    println(
+      tries
+        .map { case (st, inputOpt, stackOpt) =>
+
+          val tuples = ndpa.transition(st, inputOpt, stackOpt)
+          if(tuples.nonEmpty)
+            s"$st, $inputOpt, $stackOpt -> $tuples"
+          else ""
+        }.filterNot(_.isEmpty)
+        .mkString("\n")
+    )
+  }
   def isDisjoint[A](x: Seq[A], y: Seq[A]): Boolean = x.intersect(y).isEmpty && y.intersect(x).isEmpty
   def concat[InputSymbol, StackSymbol, State](ndpa1: NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, State],
                                               ndpa2: NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, State]): NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, State] = {
@@ -124,7 +139,11 @@ object NonDeterministicPushdownAutomata {
         }
       )
     }
+    def addTransition[S >: State](states: Seq[S], inputSymbolOpt: Option[InputSymbol], stackSymbolOpt: Option[StackSymbol], result: Seq[(State, Seq[StackSymbol])]): NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, State] = {
+      states.foldLeft(ndpa) {(ndpa, state) => ndpa.addTransition(state, inputSymbolOpt, stackSymbolOpt, result)}
+    }
     def replaceInitialState(initialState: State): NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, State] = ndpa.copy(newInitialState = initialState)
     def addState(state: State): NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, State] = ndpa.copy(newStates = (ndpa.states :+ state).distinct)
+    def replaceAcceptStates(newAcceptStates: Seq[State]): NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, State] = ndpa.copy(newAcceptStates = newAcceptStates)
   }
 }

@@ -243,7 +243,7 @@ object WirthToNDPA {
 
   sealed trait StackAlphabet
   case object InitialStackSymbol extends StackAlphabet
-  case class CentralAutoRecursion() extends StackAlphabet
+  case class CentralAutoRecursion(id: String) extends StackAlphabet
 
   sealed trait WirthGeneratedState
   case class TrapState(exp: Expression) extends WirthGeneratedState
@@ -255,6 +255,7 @@ object WirthToNDPA {
     require(seq.expressions.forall(e => e.isInstanceOf[TerminalToken]), "SequenceOfTerminals was call and not every expression is a TerminalToken")
     val terminals = seq.expressions.map {case t: TerminalToken => t.terminal}
     new NonDeterministicPushdownAutomata[WirthStuff, StackAlphabet, WirthGeneratedState] {
+      override val id: String = s"Sequence of Terminals: ${terminals.map(_.str)}"
       override val inputAlphabet: Seq[WirthStuff] = Seq.empty
       override val stackAlphabet: Seq[StackAlphabet] = Seq.empty
       override val initialStackSymbol: StackAlphabet = InitialStackSymbol
@@ -265,13 +266,13 @@ object WirthToNDPA {
 
       override def transition[S >: WirthGeneratedState](state: S, inputSymbolOpt: Option[WirthStuff], stackSymbolOpt: Option[StackAlphabet]): Seq[(S, Seq[StackAlphabet])] = {
         val notChanged = stackSymbolOpt.map(s => Seq(s)).getOrElse(Seq.empty)
-        (state, inputSymbolOpt, stackSymbolOpt) match {
-          case (PartialSequence(_, i), Some(input), _) if terminals.lift(i).contains(input) && terminals.size == i+1 => (AcceptSequence(seq) ,notChanged) :: Nil
-          case (PartialSequence(_, i), Some(input), _) if terminals.lift(i).contains(input) => (PartialSequence(seq, i+1) ,notChanged) :: Nil
-          case (AcceptSequence(_), None, Some(InitialStackSymbol)) => (AcceptSequence(seq), Seq.empty) :: Nil
-          case (_, Some(_), _) => (TrapState(seq), notChanged) :: Nil
+        val x = (state, inputSymbolOpt, stackSymbolOpt) match {
+          case (PartialSequence(sequence, i), Some(input), _) if sequence == seq && terminals.lift(i).contains(input) && terminals.size == i+1 => (AcceptSequence(seq), Seq.empty) :: Nil
+          case (PartialSequence(sequence, i), Some(input), _) if sequence == seq && terminals.lift(i).contains(input) => (PartialSequence(seq, i+1) ,notChanged) :: Nil
+//          case (AcceptSequence(sequence), None, Some(InitialStackSymbol)) if sequence == seq => (AcceptSequence(seq), Seq.empty) :: Nil
           case _ => Seq.empty
         }
+        x
       }
     }
   }
@@ -281,11 +282,16 @@ object WirthToNDPA {
     val dependencyGraph: Map[NonTerminalToken, Seq[NonTerminalToken]] = rules.map {case (ntt, exp) => ntt -> WirthExperimentation.nonTerminalsOfExpression(exp)}
     def getRule(exp: Expression): Option[NonTerminalToken] = rules.map(_.swap).get(exp)
     def isRecursive(ntt: NonTerminalToken): Boolean = callStack.contains(ntt)
+    def isRecursiveWithoutContext(ntt: NonTerminalToken, searchRecursive: Seq[NonTerminalToken] = Seq.empty): Boolean = {
+      val nextSearch = (searchRecursive :+ ntt).flatMap(dependencyGraph).distinct
+      (searchRecursive :+ ntt).exists(s => dependencyGraph(s).contains(ntt)) || (if(nextSearch.toSet.subsetOf(searchRecursive.toSet) && searchRecursive.toSet.subsetOf(nextSearch.toSet)) false else isRecursiveWithoutContext(ntt, nextSearch))
+    }
     def call(nonTerminalToken: NonTerminalToken): ExpressionContext = copy(callStack.push(nonTerminalToken))
   }
 
 
   def fromExpressionWithoutRecursion(exp: Expression, context: ExpressionContext): NonDeterministicPushdownAutomata[WirthStuff, StackAlphabet, WirthGeneratedState] = {
+    println("fromExpressionWithoutRecursion")
     exp match {
       case seq: Sequence if seq.expressions.forall(e =>  e.isInstanceOf[TerminalToken]) =>
         fromSequenceOfTerminals(seq)
@@ -296,7 +302,64 @@ object WirthToNDPA {
         ndpas.drop(1).foldLeft(ndpas.head) {case (ndpa1, ndpa2) => NonDeterministicPushdownAutomata.or(ndpa1, ndpa2)}
     }
   }
+
+  case class CentralRecursion[StackSymbol](leftMap: Map[StackSymbol,Expression],
+                                           rightMap: Map[StackSymbol, Expression]) {
+    def ++(centralRecursion: CentralRecursion[StackSymbol]): CentralRecursion[StackSymbol] = {
+      CentralRecursion(
+        leftMap ++ centralRecursion.leftMap,
+        rightMap ++ centralRecursion.rightMap)
+    }
+  }
+  def splitRecursion[StackSymbol](exp: Expression, exp2stackSymbol: Expression => StackSymbol): CentralRecursion[StackSymbol] = {
+    exp match {
+      case seq: Sequence if seq.expressions.exists(e => e.isInstanceOf[NonTerminalToken]) =>
+        val left = seq.expressions.takeWhile(e => e.isInstanceOf[TerminalToken])
+        val (Seq(ntt), right) = seq.expressions.drop(left.size).splitAt(1)
+        CentralRecursion(
+          Map(exp2stackSymbol(ntt) -> Sequence(left: _*)),
+          Map(exp2stackSymbol(ntt) -> Sequence(right: _*)))
+      case or: Or =>
+        or.expressions.map(exp => splitRecursion(exp, exp2stackSymbol)).reduce(_ ++ _)
+    }
+  }
+  def applyCentralRecursion(ndpa: NonDeterministicPushdownAutomata[WirthStuff, StackAlphabet, WirthGeneratedState],
+                            centralRecursion: CentralRecursion[StackAlphabet],
+                            context: ExpressionContext): NonDeterministicPushdownAutomata[WirthStuff, StackAlphabet, WirthGeneratedState] = {
+
+    val leftNdpas = centralRecursion.leftMap.map {case (ntt, exp) => ntt -> fromExpressionWithoutRecursion(exp, context)}
+    val rightNdpas = centralRecursion.rightMap.map {case (ntt, exp) => ntt -> fromExpressionWithoutRecursion(exp, context)}
+
+    ndpa.copy(
+      newStates = ndpa.states ++ leftNdpas.values.flatMap(_.states) ++ rightNdpas.values.flatMap(_.states),
+      newTransition = { (state: WirthGeneratedState, optInput, optStack) =>
+      val oldTransitions = ndpa.transition(state, optInput, optStack)
+      (state, optInput, optStack) match {
+        case (s, None, Some(stack)) if (stack == ndpa.initialStackSymbol || leftNdpas.keySet.contains(stack)) && s == ndpa.initialState => // entering left expression
+          println(s"entering left expression")
+          oldTransitions ++ leftNdpas.values.map(legtNdpa => (legtNdpa.initialState, Seq(legtNdpa.initialStackSymbol, stack)))
+        case (s, None, None) if ndpa.acceptStates.contains(s) => // entering right expression
+          println(s"entering right expression $optInput, $optStack")
+          oldTransitions ++ rightNdpas.values.map(rightNdpa => (rightNdpa.initialState, Seq()))
+        case (s, _, _) if leftNdpas.values.flatMap(_.acceptStates).toSeq.contains(s) => // leaving left expression
+          println(s"leaving left expression")
+          oldTransitions ++ (
+            for {
+              (stackSymbol, leftNdpa) <- leftNdpas.toSeq if leftNdpa.acceptStates.contains(s)
+            } yield (ndpa.initialState, Seq(stackSymbol)))
+        case (s, _, Some(stackSymbol)) if rightNdpas.values.flatMap(_.acceptStates).toSeq.contains(s) && rightNdpas.keys.toSeq.contains(stackSymbol) => //leaving right expression
+          println(s"leaving right expression")
+          oldTransitions ++ ndpa.acceptStates.map{ acceptState => (acceptState, Seq.empty)}
+        case _ =>
+          println(s"running for input $optInput, $optStack")
+          oldTransitions ++
+            leftNdpas.values.flatMap(l => l.transition(state, optInput, optStack)) ++
+            rightNdpas.values.flatMap(r => r.transition(state, optInput, optStack))
+      }
+    })
+  }
   def fromExpression(exp: Expression, context: ExpressionContext): NonDeterministicPushdownAutomata[WirthStuff, StackAlphabet, WirthGeneratedState] = {
+    println(s"fromExpression: ${WirthExperimentation.expToString(exp)}")
     val ndpa = exp match {
       case seq: Sequence if seq.expressions.forall(e =>  e.isInstanceOf[TerminalToken]) =>
         fromSequenceOfTerminals(seq)
@@ -319,6 +382,26 @@ object WirthToNDPA {
               NonDeterministicPushdownAutomata.kleene(fromExpression(Sequence(l: _*), context)),
               fromExpressionWithoutRecursion(context.rules(ntt), context)
             )
+          case (l, r) if context.isRecursive(ntt) =>
+            println("Auto recursion")
+            println(ntt, l, r)
+            val leftExp = Sequence(l: _*)
+            val rightExp = Sequence(r: _*)
+            val centerAutomata = fromExpressionWithoutRecursion(context.rules(ntt), context)
+            val leftAutomata = fromExpression(leftExp, context)
+            val rightAutomata = fromExpression(rightExp, context)
+            val recursion = CentralAutoRecursion(WirthExperimentation.expToString(leftExp))
+            println("parts done")
+            NonDeterministicPushdownAutomata.concat(
+              NonDeterministicPushdownAutomata.concat(
+                leftAutomata
+                  .addState(ruleInitialState)
+                  .addTransition(leftAutomata.acceptStates, None, None, Seq((ruleInitialState, Seq(recursion)))),
+                centerAutomata
+              ),
+              rightAutomata
+                .addTransition(rightAutomata.acceptStates, None, Some(recursion), Seq((rightAutomata.acceptStates.head, Seq.empty)))
+            )
         }
       case or: Or =>
         val ndpas: Seq[NonDeterministicPushdownAutomata[WirthStuff, StackAlphabet, WirthGeneratedState]] = or.expressions.map(o => fromExpression(o, context))
@@ -327,7 +410,7 @@ object WirthToNDPA {
         println(a)
         ???
     }
-
+    println("wat")
     context.getRule(exp) match {
       case Some(ntt) =>
         val ruleInitialState = RuleInitialState(ntt)
