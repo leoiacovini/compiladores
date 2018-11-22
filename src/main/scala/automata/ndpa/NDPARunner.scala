@@ -12,7 +12,7 @@ case class NDPARunner[InputSymbol, StackSymbol, State](ndpa: NonDeterministicPus
 
 
   def run(input: Option[InputSymbol]): NDPARunner[InputSymbol, StackSymbol, State] = {
-    val appliedNewStates = for {
+    val appliedNewStates: Seq[NDPARunState[State, InputSymbol, StackSymbol]] = for {
       currentRunState <- current
       transition <- ndpa.transition(currentRunState.state, input, currentRunState.stack.headOption)
     } yield currentRunState.popStack().applyTransitionResult(input, currentRunState.stack.headOption, transition)
@@ -53,7 +53,6 @@ case class NDPARunner[InputSymbol, StackSymbol, State](ndpa: NonDeterministicPus
       """.stripMargin
     }.mkString("")
   }
-
 }
 
 object NDPARunner {
@@ -78,21 +77,21 @@ object NDPARunner {
 //      if(runState.state.equals(AcceptSequence(Sequence(TerminalToken("a"))))) {
 //        println(emptyTransitionRunStates)
 //      }
-      println {
-        s"""
-           |NDPARunState: {
-           |  state: ${runState.state}
-           |  stack:
-           |    ${runState.stack.mkString("\n    ")}
-           |  history:
-           |    ${runState.history.map(_.debugString).mkString("\n    ")}
-           |}
-      """.stripMargin
-      }
+//      println {
+//        s"""
+//           |NDPARunState: {
+//           |  state: ${runState.state}
+//           |  stack:
+//           |    ${runState.stack.mkString("\n    ")}
+//           |  history:
+//           |    ${runState.history.map(_.debugString).mkString("\n    ")}
+//           |}
+//      """.stripMargin
+//      }
 
       val automaticTransitions = (emptyTransitionRunStates ++ stackTransitionRunStates).filterNot(runStates.contains).distinct
       if (automaticTransitions.nonEmpty)
-        runStates ++ runEmptyTransitions(ndpa, automaticTransitions).distinct
+        runEmptyTransitions(ndpa, runStates ++ automaticTransitions).distinct
       else Seq(runState)
     }.distinct
   }

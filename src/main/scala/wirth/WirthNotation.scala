@@ -373,15 +373,19 @@ object WirthToNDPA {
         (left, right) match {
           case (l, r) if l.isEmpty && r.isEmpty => throw new Exception("empty on both sides")
           case (l, r) if l.isEmpty => //left recursion
+            val prefix = fromExpressionWithoutRecursion(context.rules(ntt), context)
+            val repeat = NonDeterministicPushdownAutomata.kleene(fromExpression(Sequence(r: _*), context))
             NonDeterministicPushdownAutomata.concat(
-              fromExpressionWithoutRecursion(context.rules(ntt), context),
-              NonDeterministicPushdownAutomata.kleene(fromExpression(Sequence(r: _*), context))
-            )
+              prefix,
+              repeat
+            ).addTransition(prefix.acceptStates, None, Some(InitialStackSymbol), Seq((repeat.acceptStates.head, Seq.empty)))
           case (l, r) if r.isEmpty => // right recursion
+            val repeat = NonDeterministicPushdownAutomata.kleene(fromExpression(Sequence(l: _*), context))
+            val suffix = fromExpressionWithoutRecursion(context.rules(ntt), context)
             NonDeterministicPushdownAutomata.concat(
-              NonDeterministicPushdownAutomata.kleene(fromExpression(Sequence(l: _*), context)),
-              fromExpressionWithoutRecursion(context.rules(ntt), context)
-            )
+              repeat,
+              suffix
+            )//.addTransition(suffix.acceptStates, None, Some(InitialStackSymbol), Seq((suffix.acceptStates.head, Seq.empty)))
           case (l, r) if context.isRecursive(ntt) =>
             println("Auto recursion")
             println(ntt, l, r)
@@ -417,7 +421,8 @@ object WirthToNDPA {
         ndpa
           .addState(ruleInitialState)
           .replaceInitialState(ruleInitialState)
-          .addTransition(ruleInitialState, None, None, Seq((ndpa.initialState, Seq.empty)))
+          .addTransition(ruleInitialState, None, None, Seq((ndpa.initialState, Seq(InitialStackSymbol))))
+          .addTransition(ndpa.acceptStates, None, Some(InitialStackSymbol), Seq((ndpa.acceptStates.head, Seq.empty)))
       case None =>
         ndpa
     }

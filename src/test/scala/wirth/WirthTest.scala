@@ -254,6 +254,9 @@ class WirthTest extends WordSpec {
         Terminal("e"),
         Terminal("f"),
       )
+      println("from expression")
+      println(runner.runAll(seq1).debugString)
+      println("from expression2")
       assert(runner.accepts(seq1))
       assert(runner.accepts(seq2))
 
@@ -271,8 +274,7 @@ class WirthTest extends WordSpec {
       assert(runner.rejects(seq2 ++ seq1))
 
     }
-
-    "from rules" in {
+    "from rules - left recursion" in {
       val root = NonTerminalToken("ROOT")
 
       // root -> root "a" | "b"
@@ -287,6 +289,8 @@ class WirthTest extends WordSpec {
       val wirthNDPA = WirthToNDPA.fromRules(rules, root)
 
       val runner = NDPARunner.fromNDPA(wirthNDPA)
+      val x: NDPARunner[WirthStuff, StackAlphabet, WirthGeneratedState] = runner.run(Some(Terminal("b")))
+      println(x.debugString)
 
       assert(runner.accepts(Seq(Terminal("b"), Terminal("a"))))
       assert(runner.accepts(Seq(Terminal("b"), Terminal("a"), Terminal("a"))))
@@ -296,7 +300,9 @@ class WirthTest extends WordSpec {
       assert(runner.rejects(Seq(Terminal("a"), Terminal("a"), Terminal("a"), Terminal("b"))))
       assert(runner.rejects(Seq(Terminal("a"), Terminal("a"), Terminal("a"), Terminal("a"))))
 
-
+    }
+    "from rules - right recursion" in {
+      val root = NonTerminalToken("ROOT")
 
       // root -> "a" root | "b"
       val rightRecursion = Or(
@@ -306,18 +312,17 @@ class WirthTest extends WordSpec {
         ),
         TerminalToken("b")
       )
-      val rules2 = Map(root -> rightRecursion)
-      val wirthNDPA2 = WirthToNDPA.fromRules(rules2, root)
+      val rules = Map(root -> rightRecursion)
+      val wirthNDPA = WirthToNDPA.fromRules(rules, root)
 
-      val runner2 = NDPARunner.fromNDPA(wirthNDPA2)
+      val runner = NDPARunner.fromNDPA(wirthNDPA)
+      assert(runner.accepts(Seq(Terminal("a"), Terminal("b"))))
+      assert(runner.accepts(Seq(Terminal("a"), Terminal("a"), Terminal("b"))))
+      assert(runner.accepts(Seq(Terminal("a"), Terminal("a"), Terminal("a"), Terminal("b"))))
 
-      assert(runner2.accepts(Seq(Terminal("a"), Terminal("b"))))
-      assert(runner2.accepts(Seq(Terminal("a"), Terminal("a"), Terminal("b"))))
-      assert(runner2.accepts(Seq(Terminal("a"), Terminal("a"), Terminal("a"), Terminal("b"))))
-
-      assert(runner2.rejects(Seq(Terminal("a"), Terminal("a"), Terminal("b"), Terminal("b"))))
-      assert(runner2.rejects(Seq(Terminal("b"), Terminal("a"), Terminal("a"), Terminal("a"))))
-      assert(runner2.rejects(Seq(Terminal("a"), Terminal("a"), Terminal("a"), Terminal("a"))))
+      assert(runner.rejects(Seq(Terminal("a"), Terminal("a"), Terminal("b"), Terminal("b"))))
+      assert(runner.rejects(Seq(Terminal("b"), Terminal("a"), Terminal("a"), Terminal("a"))))
+      assert(runner.rejects(Seq(Terminal("a"), Terminal("a"), Terminal("a"), Terminal("a"))))
     }
 
     "from rules auto recursion" in {
@@ -340,36 +345,18 @@ class WirthTest extends WordSpec {
                         stack <- stackAlphabet
                         state <- wirthNDPA.states } yield (state, input, stack)
       val runner = NDPARunner.fromNDPA(wirthNDPA)
-      NonDeterministicPushdownAutomata.printTransitions(wirthNDPA, tries)
-//      assert(runner.accepts(Seq(Terminal("a"))))
-//      println(runner.debugString)
-//      println(runner.runAll(Seq(Terminal("("))).debugString)
-//      println(runner.runAll(Seq(Terminal("("), Terminal("a"))).debugString)
+//      NonDeterministicPushdownAutomata.printTransitions(wirthNDPA, tries)
+      println("Debugging")
+      println(runner.debugString)
+      println("Debugging2")
+      println(runner.runAll(Seq(Terminal("("))).debugString)
+      println("Debugging3")
+      println(runner.runAll(Seq(Terminal("("), Terminal("("))).debugString)
+      println("Debugging4")
 //      println(runner.runAll(Seq(Terminal("("), Terminal("a"), Terminal(")"))).debugString)
+//      assert(runner.accepts(Seq(Terminal("a"))))
 //      assert(runner.accepts(Seq(Terminal("("), Terminal("a"), Terminal(")"))))
-
-      Seq(
-        (RuleInitialState(root), None, None)
-          -> (PartialSequence(Sequence(TerminalToken("(")), 0), Seq.empty),
-        (PartialSequence(Sequence(TerminalToken("(")), 0), None, Some(InitialStackSymbol))
-          -> (AcceptSequence(Sequence(TerminalToken("("))), Seq(InitialStackSymbol)),
-        (AcceptSequence(Sequence(TerminalToken("("))), None, None)
-          -> (RuleInitialState(root), Seq(CentralAutoRecursion("("))),
-        (RuleInitialState(root), None, None)
-          -> (PartialSequence(Sequence(TerminalToken("(")), 0), Seq.empty),
-        (PartialSequence(Sequence(TerminalToken("(")), 0), None, None)
-          -> (PartialSequence(Sequence(TerminalToken("a")), 0), Seq.empty),
-        (PartialSequence(Sequence(TerminalToken("a")), 0), Some(Terminal("a")), None)
-          -> (AcceptSequence(Sequence(TerminalToken("a"))), Seq.empty),
-        (AcceptSequence(Sequence(TerminalToken("a"))), None, None)
-          -> (PartialSequence(Sequence(TerminalToken(")")), 0), Seq.empty),
-        (PartialSequence(Sequence(TerminalToken(")")), 0), Some(Terminal(")")), None)
-          -> (AcceptSequence(Sequence(TerminalToken(")"))), Seq.empty),
-        (AcceptSequence(Sequence(TerminalToken(")"))), None, Some(CentralAutoRecursion("(")))
-          -> (AcceptSequence(Sequence(TerminalToken(")"))), Seq.empty)
-      )
 //      assert(runner.accepts(Seq(Terminal("("), Terminal("("), Terminal("a"), Terminal(")"), Terminal(")"))))
-
 
 //      assert(runner.rejects(Seq(Terminal("("), Terminal("a"))))
 //      assert(runner.rejects(Seq(Terminal("("), Terminal("("), Terminal("a"), Terminal(")"))))
