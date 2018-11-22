@@ -40,6 +40,12 @@ case class NDPARunner[InputSymbol, StackSymbol, State](ndpa: NonDeterministicPus
     }
   }
 
+  def getAcceptedRunState: Option[NDPARunState[State, InputSymbol, StackSymbol]] = {
+    current.find {
+      case NDPARunState(state, stack, _) => ndpa.acceptStates.contains(state) && stack.isEmpty
+    }
+  }
+
   def debugString: String = {
     current.map {runState =>
       s"""

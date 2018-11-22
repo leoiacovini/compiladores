@@ -7,7 +7,8 @@ case class RunHistoryItem[State, InputSymbol, StackSymbol](fromState: State, toS
                                                            inputSymbolOpt: Option[InputSymbol],
                                                            stackSymbolOpt: Option[StackSymbol]) {
   def debugString: String = {
-    s"""$fromState, $inputSymbolOpt, $stackSymbolOpt -> $toState, $newStackSymbols"""
+    s"""$fromState, $inputSymbolOpt, $stackSymbolOpt
+            -> $toState, $newStackSymbols"""
   }
 }
 case class NDPARunState[State, InputSymbol, StackSymbol](state: State, stack: Seq[StackSymbol], history: Seq[RunHistoryItem[State, InputSymbol, StackSymbol]]) {

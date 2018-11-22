@@ -2,6 +2,8 @@ package automata.ndpa
 
 import wirth.WirthToNDPA.StackAlphabet
 
+import scala.util.Try
+
 trait NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, +State] {
   val id: String = "common-id"
   val inputAlphabet: Seq[InputSymbol]
@@ -59,7 +61,7 @@ object NonDeterministicPushdownAutomata {
   def isDisjoint[A](x: Seq[A], y: Seq[A]): Boolean = x.intersect(y).isEmpty && y.intersect(x).isEmpty
   def concat[InputSymbol, StackSymbol, State](ndpa1: NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, State],
                                               ndpa2: NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, State]): NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, State] = {
-    require(isDisjoint(ndpa1.states, ndpa2.states), "States must be disjoint")
+    require(isDisjoint(ndpa1.states, ndpa2.states), s"States must be disjoint\nNDPA1: ${ndpa1.states}\nNDPA2: ${ndpa2.states}")
 
     new NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, State] {
       override val inputAlphabet: Seq[InputSymbol] = (ndpa1.inputAlphabet ++ ndpa2.inputAlphabet).distinct
@@ -135,7 +137,7 @@ object NonDeterministicPushdownAutomata {
       ndpa.copy(
         newTransition = (nstate, ninputSymbolOpt, nstackSymbolOpt) => {
           val added = if(state == nstate && ninputSymbolOpt == inputSymbolOpt && nstackSymbolOpt == stackSymbolOpt) result else Seq.empty
-          ndpa.transition(nstate, ninputSymbolOpt, nstackSymbolOpt) ++ added
+          Try(ndpa.transition(nstate, ninputSymbolOpt, nstackSymbolOpt)).getOrElse(Seq.empty) ++ added
         }
       )
     }

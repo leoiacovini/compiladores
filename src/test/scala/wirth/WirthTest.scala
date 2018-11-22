@@ -7,79 +7,7 @@ import wirth.WirthNotation.{ExpressionInitial, ExpressionRecognized, WirthState}
 import wirth.WirthToNDPA._
 
 class WirthTest extends WordSpec {
-  val wirthRules = Map(
-    NonTerminalToken("PROGRAM") ->
-      Sequence(
-        NonTerminalToken("ASSIGNMENT"),
-        ExpressionKleene(
-          Sequence(
-            TerminalToken(";"),
-            NonTerminalToken("ASSIGNMENT")
-          )
-        )
-      ),
-    NonTerminalToken("ASSIGNMENT") ->
-      Sequence(
-        TerminalToken("LET"),
-        TerminalToken("id"),
-        TerminalToken("="),
-        NonTerminalToken("EXPRESSION")
-      ),
-    NonTerminalToken("EXPRESSION") ->
-      Sequence(
-        NonTerminalToken("TERM"),
-        ExpressionKleene(
-          Sequence(
-            Or(
-              TerminalToken("+"),
-              TerminalToken("-")
-            ),
-            NonTerminalToken("TERM")
-          )
-        )
-      ),
-    NonTerminalToken("TERM") ->
-      Sequence(
-        NonTerminalToken("FACTOR"),
-        ExpressionKleene(
-          Sequence(
-            Or(
-              TerminalToken("*"),
-              TerminalToken("/")
-            ),
-            NonTerminalToken("FACTOR")
-          )
-        )
-      ),
-    NonTerminalToken("FACTOR") ->
-      Or(
-        TerminalToken("id"),
-        TerminalToken("num"),
-        Sequence(
-          TerminalToken("("),
-          NonTerminalToken("EXPRESSION"),
-          TerminalToken(")"),
-        )
-      )
-  )
 
-  val dependencyMap: Map[NonTerminalToken, Seq[NonTerminalToken]] = Map(
-    NonTerminalToken("PROGRAM") -> Seq(
-      NonTerminalToken("ASSIGNMENT")
-    ),
-    NonTerminalToken("ASSIGNMENT") -> Seq(
-      NonTerminalToken("EXPRESSION")
-    ),
-    NonTerminalToken("EXPRESSION") -> Seq(
-      NonTerminalToken("TERM")
-    ),
-    NonTerminalToken("TERM") -> Seq(
-      NonTerminalToken("FACTOR")
-    ),
-    NonTerminalToken("FACTOR") -> Seq(
-      NonTerminalToken("EXPRESSION")
-    )
-  )
 
   "WirthExpression" must {
     "work" in {
@@ -291,7 +219,7 @@ class WirthTest extends WordSpec {
       val runner = NDPARunner.fromNDPA(wirthNDPA)
       val x: NDPARunner[WirthStuff, StackAlphabet, WirthGeneratedState] = runner.run(Some(Terminal("b")))
       println(x.debugString)
-
+//
       assert(runner.accepts(Seq(Terminal("b"), Terminal("a"))))
       assert(runner.accepts(Seq(Terminal("b"), Terminal("a"), Terminal("a"))))
       assert(runner.accepts(Seq(Terminal("b"), Terminal("a"), Terminal("a"), Terminal("a"))))
@@ -413,14 +341,14 @@ class WirthTest extends WordSpec {
 
   }
   def space() = (1 to 4000).map(_ => "").foreach(println)
-  "Central recursion apply" in {
-    val seqOfTerminals = Sequence(
-      TerminalToken(Terminal("a")),
-      TerminalToken(Terminal("b")),
-      TerminalToken(Terminal("c"))
-    )
 
-    val seqNdpa = WirthToNDPA.fromSequenceOfTerminals(seqOfTerminals)
+  val absSequence = Sequence(
+    TerminalToken(Terminal("a")),
+    TerminalToken(Terminal("b")),
+    TerminalToken(Terminal("c"))
+  )
+  "Central recursion apply" in {
+    val seqNdpa = WirthToNDPA.fromSequenceOfTerminals(absSequence)
 
     val centralRecursion = CentralRecursion[StackAlphabet](
       Map(
@@ -440,7 +368,7 @@ class WirthTest extends WordSpec {
         root,
         TerminalToken(")")
       ),
-      seqOfTerminals
+      absSequence
     )
     val rules = Map(root -> autoRecursion)
     val context = ExpressionContext(Seq(root), rules)
@@ -448,19 +376,19 @@ class WirthTest extends WordSpec {
     val runnerSeq = NDPARunner.fromNDPA(seqNdpa)
     val runner = NDPARunner.fromNDPA(ndpa)
 
-//    assert(runnerSeq.accepts(Seq(Terminal("a"), Terminal("b"), Terminal("c"))))
-//    assert(runner.accepts(Seq(Terminal("a"), Terminal("b"), Terminal("c"))))
+    assert(runnerSeq.accepts(Seq(Terminal("a"), Terminal("b"), Terminal("c"))))
+    assert(runner.accepts(Seq(Terminal("a"), Terminal("b"), Terminal("c"))))
 
-//    space()
-//    val run1 = runner.runAll(Seq(Terminal("(")))
-//    println("wat")
-//    println(run1.debugString)
-//    assert {
-//      run1.current.exists {c =>
-//        c.state == PartialSequence(Sequence(TerminalToken("a"), TerminalToken("b"), TerminalToken("c")), 0) &&
-//          c.stack.headOption.contains(CentralAutoRecursion("("))
-//      }
-//    }
+    space()
+    val run1 = runner.runAll(Seq(Terminal("(")))
+    println("wat")
+    println(run1.debugString)
+    assert {
+      run1.current.exists {c =>
+        c.state == PartialSequence("1", Sequence(TerminalToken("a"), TerminalToken("b"), TerminalToken("c")), 0) &&
+          c.stack.headOption.contains(CentralAutoRecursion("("))
+      }
+    }
 
 //    val run2 = runner.runAll(Seq(Terminal("("), Terminal("a")))
 //    println("wat2")
@@ -523,14 +451,14 @@ class WirthTest extends WordSpec {
 //      }
 //    }
 
-    assert(runner.accepts(Seq(Terminal("a"), Terminal("b"), Terminal("c"))))
-    assert(runner.accepts(Seq(Terminal("("), Terminal("a"), Terminal("b"), Terminal("c"), Terminal(")"))))
-    assert(runner.accepts(Seq(Terminal("("), Terminal("("), Terminal("a"), Terminal("b"), Terminal("c"), Terminal(")"), Terminal(")"))))
-    assert(runner.accepts(Seq(Terminal("["), Terminal("a"), Terminal("b"), Terminal("c"), Terminal("]"))))
-    assert(runner.accepts(Seq(Terminal("["), Terminal("("), Terminal("a"), Terminal("b"), Terminal("c"), Terminal(")"), Terminal("]"))))
-
-    assert(runner.rejects(Seq(Terminal("a"), Terminal("b"))))
-    assert(runner.rejects(Seq(Terminal("("), Terminal("a"), Terminal("b"), Terminal(")"))))
+//    assert(runner.accepts(Seq(Terminal("a"), Terminal("b"), Terminal("c"))))
+//    assert(runner.accepts(Seq(Terminal("("), Terminal("a"), Terminal("b"), Terminal("c"), Terminal(")"))))
+//    assert(runner.accepts(Seq(Terminal("("), Terminal("("), Terminal("a"), Terminal("b"), Terminal("c"), Terminal(")"), Terminal(")"))))
+//    assert(runner.accepts(Seq(Terminal("["), Terminal("a"), Terminal("b"), Terminal("c"), Terminal("]"))))
+//    assert(runner.accepts(Seq(Terminal("["), Terminal("("), Terminal("a"), Terminal("b"), Terminal("c"), Terminal(")"), Terminal("]"))))
+//
+//    assert(runner.rejects(Seq(Terminal("a"), Terminal("b"))))
+//    assert(runner.rejects(Seq(Terminal("("), Terminal("a"), Terminal("b"), Terminal(")"))))
 //    println {
 //      "DEBUG\n" +
 //      runner.runAll(Seq(Terminal("("))).debugString
@@ -541,9 +469,9 @@ class WirthTest extends WordSpec {
 //      "DEBUG\n" +
 //      runner.runAll(Seq(Terminal("("), Terminal("a"), Terminal("b"), Terminal("c"))).debugString
 //    }
-    assert(runner.rejects(Seq(Terminal("("), Terminal("a"), Terminal("b"), Terminal("c"))))
-    assert(runner.rejects(Seq(Terminal("a"), Terminal("b"), Terminal("c"), Terminal(")"))))
-    assert(runner.rejects(Seq(Terminal("["), Terminal("("), Terminal("a"), Terminal("b"), Terminal("c"), Terminal("]"), Terminal(")"))))
+//    assert(runner.rejects(Seq(Terminal("("), Terminal("a"), Terminal("b"), Terminal("c"))))
+//    assert(runner.rejects(Seq(Terminal("a"), Terminal("b"), Terminal("c"), Terminal(")"))))
+//    assert(runner.rejects(Seq(Terminal("["), Terminal("("), Terminal("a"), Terminal("b"), Terminal("c"), Terminal("]"), Terminal(")"))))
 
 
   }
