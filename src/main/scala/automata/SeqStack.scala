@@ -7,3 +7,16 @@ object SeqStack {
     def pop(): Seq[A] = seq.drop(1)
   }
 }
+
+object SeqSplit {
+  implicit class SeqSplitBy[A](seq: Seq[A]) {
+    def splitBy(a: A): Seq[Seq[A]] = {
+      seq.indexOf(a) match {
+        case -1 => Seq(seq)
+        case i =>
+          val (left, right) = seq.splitAt(i)
+          left +: right.drop(1).splitBy(a)
+      }
+    }
+  }
+}
