@@ -1,7 +1,7 @@
 package wirth
 
-import automata.CharAlphabets
-import automata.ndpa.{NDPARunner, NonDeterministicPushdownAutomata}
+import common.automata.CharAlphabets
+import common.automata.ndpa.{NDPARunner, NonDeterministicPushdownAutomata}
 import jdk.nashorn.internal.parser.TokenStream
 import wirth.WirthNotation._
 import wirth.WirthToNDPA.{ExpressionContext, fromExpressionWithoutRecursion}
@@ -106,7 +106,7 @@ object TerminalToken {
 }
 
 object WirthExperimentation {
-  import automata.SeqStack._
+  import common.automata.SeqStack._
   val openTokens = Seq("(", "[", "{")
   val closeTokens = Seq(")", "]", "}")
   case class NextExpression(next: Seq[WirthStuff], rest: Seq[WirthStuff])
@@ -282,7 +282,7 @@ object WirthToNDPA {
   }
 
   case class ExpressionContext(callStack: Seq[NonTerminalToken], rules: Map[NonTerminalToken, Expression]) {
-    import automata.SeqStack._
+    import common.automata.SeqStack._
     val dependencyGraph: Map[NonTerminalToken, Seq[NonTerminalToken]] = rules.map {case (ntt, exp) => ntt -> WirthExperimentation.nonTerminalsOfExpression(exp)}
     def getRule(exp: Expression): Option[NonTerminalToken] = rules.map(_.swap).get(exp)
     def isRecursive(ntt: NonTerminalToken): Boolean = callStack.contains(ntt)

@@ -1,10 +1,10 @@
 package consumers
 
-import automata.commons.{IdentifierAutomata, NumberAutomata, SpecialAutomata}
-import automata.ndfa.NDFARunner
+import common.automata.commons.{IdentifierAutomata, NumberAutomata, SpecialAutomata}
+import common.automata.ndfa.NDFARunner
 import common.Token
 import consumers.ConsumeLine._
-import event_machine.EventMachine.{Event, EventResult}
+import common.event_machine.EventMachine.{Event, EventResult}
 
 object ConsumeChars {
 
@@ -55,7 +55,7 @@ object ConsumeChars {
     event.state.ndfaRunner match {
       // If are in the middle of a automate cycle
       case Some(_: NDFARunner[Char, _]) => processNdfa(event)
-      // It's the first chars os a possible sequence, we need to start a new automata
+      // It's the first chars os a possible sequence, we need to start a new common.automata
       case None => startNewNdfa(event)
     }
   }

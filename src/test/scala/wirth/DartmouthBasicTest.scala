@@ -1,6 +1,6 @@
 package wirth
 
-import automata.ndpa.NDPARunner
+import common.automata.ndpa.NDPARunner
 import org.scalatest.{FlatSpec, WordSpec}
 
 class DartmouthBasicTest extends WordSpec {
