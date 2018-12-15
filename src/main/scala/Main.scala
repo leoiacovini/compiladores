@@ -1,8 +1,8 @@
 import consumers.ConsumeFile.ConsumeFileOutput
-import consumers.ConsumeLine.{AsciiChar, ConsumeLineOutput}
-import consumers.{ConsumeChars, ConsumeFile, ConsumeLine}
-import event_machine.EventMachine
-import event_machine.EventMachine.{Event, EventResult}
+import consumers.ConsumeLine.ConsumeLineOutput
+import consumers.{ConsumeFile, ConsumeLine}
+import common.event_machine.EventMachine
+import common.event_machine.EventMachine.{Event, EventResult}
 
 object Main extends App {
   val filename: String = args(0)
@@ -14,8 +14,4 @@ object Main extends App {
     val chars: Seq[ConsumeLineOutput] = ConsumeLine(input)
     EventResult(chars, 0)
   })
-
-//  val charsConsumer = EventMachine[AsciiChar, ConsumeCharOutput, ConsumeCharState[Any]](ConsumeCharState.empty[IdentifierState], (input: AsciiChar) => {
-//
-//  })
 }

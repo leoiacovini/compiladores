@@ -1,6 +1,6 @@
 package consumers
 
-import automata.CharAlphabets
+import common.automata.CharAlphabets
 import consumers.ConsumeFile.{ConsumeFileOutput, EndOfFile, FileLine}
 import sun.reflect.generics.reflectiveObjects.NotImplementedException
 

@@ -1,6 +1,6 @@
 package wirth
 
-import automata.{LexicalToken, Transducer}
+import common.automata.{LexicalToken, Transducer}
 import consumers.ConsumeLine
 
 class WirthTransducer extends Transducer {

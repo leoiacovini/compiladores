@@ -1,7 +1,7 @@
 package wirth
 
-import automata.ndfa.NDFARunner
-import automata.ndpa.{NDPARunner, RunHistoryItem}
+import common.automata.ndfa.NDFARunner
+import common.automata.ndpa.{NDPARunner, RunHistoryItem}
 import basic.{BasicToLLVM, Print}
 import consumers.ConsumeLine
 import consumers.ConsumeLine.AsciiChar
@@ -10,7 +10,7 @@ import org.scalatest.WordSpec
 
 class TerminalAutomataTest extends WordSpec {
   val runner: NDFARunner[AsciiChar, TerminalAutomata.TerminalAutomataState] = NDFARunner.fromNDFA(new TerminalAutomata)
-  "A Terminal automata" must {
+  "A Terminal common.automata" must {
     "accept quoted strings" in {
       val quoted = Seq(
         AsciiChar(c = '"', baf = ConsumeLine.Useful, asciiCategory = ConsumeLine.Special),

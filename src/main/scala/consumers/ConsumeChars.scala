@@ -1,14 +1,15 @@
 package consumers
 
-import automata.commons.{IdentifierAutomata, NumberAutomata, SpecialAutomata}
-import automata.ndfa.NDFARunner
+import common.automata.commons.{IdentifierAutomata, NumberAutomata, SpecialAutomata}
+import common.automata.ndfa.NDFARunner
+import common.Token
 import consumers.ConsumeLine._
-import event_machine.EventMachine.{Event, EventResult}
+import common.event_machine.EventMachine.{Event, EventResult}
 
 object ConsumeChars {
 
   type ConsumeCharEvent = Event[AsciiChar, ConsumeCharState]
-  type ConsumeCharEventResult = EventResult[String, ConsumeCharState]
+  type ConsumeCharEventResult = EventResult[Token, ConsumeCharState]
   type CharNDFARunner = NDFARunner[Char, Any]
 
   case class ConsumeCharState(ndfaRunner: Option[CharNDFARunner], accumulator: String = "") {
@@ -37,14 +38,14 @@ object ConsumeChars {
   private def startNewNdfa(event: ConsumeCharEvent): ConsumeCharEventResult = {
     runnerForAscii(event.input) match {
       case Some(runner) => processNdfa(event.copy(state = ConsumeCharState(Some(runner))))
-      case None => EventResult.single(event.state.accumulator, event.state)
+      case None => EventResult.single(Token(event.state.accumulator), event.state)
     }
   }
 
   private def processNdfa(event: ConsumeCharEvent): ConsumeCharEventResult = {
     val newState: ConsumeCharState = event.state.run(event.input.c)
     if (event.state.ndfaRunner.forall(x => x.isAccepted) && !newState.ndfaRunner.forall(x => x.isAccepted)) {
-      EventResult.single(event.state.accumulator, stateForEvent(event).run(event.input.c))
+      EventResult.single(Token(event.state.accumulator), stateForEvent(event).run(event.input.c))
     } else {
       EventResult.empty(newState) // Empty output
     }
@@ -54,7 +55,7 @@ object ConsumeChars {
     event.state.ndfaRunner match {
       // If are in the middle of a automate cycle
       case Some(_: NDFARunner[Char, _]) => processNdfa(event)
-      // It's the first chars os a possible sequence, we need to start a new automata
+      // It's the first chars os a possible sequence, we need to start a new common.common.automata
       case None => startNewNdfa(event)
     }
   }

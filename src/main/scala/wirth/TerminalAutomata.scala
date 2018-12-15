@@ -1,7 +1,6 @@
 package wirth
 
-import automata.ndfa.NonDeterministicFiniteAutomata
-import automata.ndpa.NonDeterministicPushdownAutomata
+import common.automata.ndfa.NonDeterministicFiniteAutomata
 import consumers.ConsumeLine.AsciiChar
 import wirth.TerminalAutomata._
 

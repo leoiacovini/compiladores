@@ -1,8 +1,8 @@
 package wirth
 
-import automata.ndpa.{NDPARunner, RunHistoryItem}
 import basic.{BasicToLLVM, Print}
 import llvm.{LLVMProgram, OutputWriter}
+import common.automata.ndpa.NDPARunner
 import org.scalatest.{FlatSpec, WordSpec}
 
 class DartmouthBasicTest extends WordSpec {

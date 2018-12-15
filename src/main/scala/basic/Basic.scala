@@ -1,6 +1,6 @@
 package basic
 
-import automata.ndpa.RunHistoryItem
+import common.automata.ndpa.RunHistoryItem
 import llvm.{LLVMGlobalString, LLVMProgram}
 import wirth.{Terminal, WirthLexicalToken, WirthToNDPA}
 
@@ -13,11 +13,11 @@ object BasicToLLVM {
         case Terminal(a) => a
         case _ => ""
       }.reduce(_ + _)
-        Print(printArg)
+        DPrint(printArg)
     }
   }
 
-  def addPrint(llvmProgram: LLVMProgram, print: Print): LLVMProgram = {
+  def addPrint(llvmProgram: LLVMProgram, print: DPrint): LLVMProgram = {
     val localVariable = "str" + Math.random()
     val str = LLVMGlobalString(localVariable, print.arg)
     llvmProgram.copy(
@@ -27,5 +27,5 @@ object BasicToLLVM {
   }
 }
 trait DartmouthBasicCommand
-case class Print(arg: String) extends DartmouthBasicCommand
+case class DPrint(arg: String) extends DartmouthBasicCommand
 case class OtherCommand()

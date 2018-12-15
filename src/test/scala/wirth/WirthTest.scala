@@ -1,6 +1,6 @@
 package wirth
 
-import automata.ndpa.{NDPARunner, NonDeterministicPushdownAutomata}
+import common.automata.ndpa.{NDPARunner, NonDeterministicPushdownAutomata}
 import org.scalatest.WordSpec
 import wirth.WirthExperimentation.NextExpression
 import wirth.WirthNotation.{ExpressionInitial, ExpressionRecognized, WirthState}
