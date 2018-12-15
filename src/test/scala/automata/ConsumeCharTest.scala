@@ -1,5 +1,6 @@
 package automata
 
+import common.Token
 import consumers.ConsumeChars.ConsumeCharState
 import consumers.{ConsumeChars, ConsumeLine}
 import consumers.ConsumeLine.AsciiChar
@@ -28,7 +29,8 @@ class ConsumeCharTest extends WordSpec {
         AsciiChar(c = ';', baf = ConsumeLine.Useful, asciiCategory = ConsumeLine.Special),
         AsciiChar(c = ' ', baf = ConsumeLine.Disposable, asciiCategory = ConsumeLine.Delimiter))
 
-      assert(eventMachine.consume(chars) == Seq("10", "LET", "X", "=", "42", ";"))
+      assert(eventMachine.consume(chars) ==
+        Seq(Token("10"), Token("LET"), Token("X"), Token("="), Token("42"), Token(";")))
 
       val chars2 = Seq(
         AsciiChar(c = '2', baf = ConsumeLine.Useful, asciiCategory = ConsumeLine.Digit),
@@ -49,7 +51,8 @@ class ConsumeCharTest extends WordSpec {
         AsciiChar(c = ';', baf = ConsumeLine.Useful, asciiCategory = ConsumeLine.Special),
         AsciiChar(c = ' ', baf = ConsumeLine.Disposable, asciiCategory = ConsumeLine.Delimiter))
 
-      assert(eventMachine.consume(chars2) ==  Seq("20", "READ", "I3", ",", "J", ",", "K1", ";"))
+      assert(eventMachine.consume(chars2) ==
+        Seq(Token("20"), Token("READ"), Token("I3"), Token(","), Token("J"), Token(","), Token("K1"), Token(";")))
 
       val chars3 = Seq(
         AsciiChar(c = '3', baf = ConsumeLine.Useful, asciiCategory = ConsumeLine.Digit),
@@ -69,7 +72,8 @@ class ConsumeCharTest extends WordSpec {
         AsciiChar(c = ';', baf = ConsumeLine.Useful, asciiCategory = ConsumeLine.Special),
         AsciiChar(c = ' ', baf = ConsumeLine.Disposable, asciiCategory = ConsumeLine.Delimiter))
 
-      assert(eventMachine.consume(chars3) == Seq("30", "DATA", "4", ",", "-", "5", ",", "0", ";"))
+      assert(eventMachine.consume(chars3) ==
+        Seq(Token("30"), Token("DATA"), Token("4"), Token(","), Token("-"), Token("5"), Token(","), Token("0"), Token(";")))
 
       val chars4 = Seq(
         AsciiChar(c = '7', baf = ConsumeLine.Useful, asciiCategory = ConsumeLine.Digit),
@@ -98,7 +102,8 @@ class ConsumeCharTest extends WordSpec {
         AsciiChar(c = ';', baf = ConsumeLine.Useful, asciiCategory = ConsumeLine.Special),
         AsciiChar(c = ' ', baf = ConsumeLine.Disposable, asciiCategory = ConsumeLine.Delimiter))
 
-      assert(eventMachine.consume(chars4) == Seq("70", "FOR", "I", "=", "1", "TO", "K1", "STEP", "J", ";"))
+      assert(eventMachine.consume(chars4) ==
+        Seq(Token("70"), Token("FOR"), Token("I"), Token("="), Token("1"), Token("TO"), Token("K1"), Token("STEP"), Token("J"), Token(";")))
     }
   }
 
