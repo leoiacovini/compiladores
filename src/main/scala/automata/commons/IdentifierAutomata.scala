@@ -8,7 +8,6 @@ object IdentifierState {
   case object Start extends IdentifierState
   case object Repeat extends IdentifierState
   case object NotIdentifier extends IdentifierState
-
 }
 
 object IdentifierAutomata extends NonDeterministicFiniteAutomata[Char, IdentifierState] {

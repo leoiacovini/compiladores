@@ -9,11 +9,11 @@ import java.util.UUID.randomUUID
 
 import scala.annotation.tailrec
 
-trait WirthStuff
-case class Terminal(str: String) extends WirthStuff
-case class NonTerminal(str: String) extends WirthStuff
-case class Special(str: String) extends WirthStuff
-case object EmptySequence extends WirthStuff
+trait WirthLexicalToken
+case class Terminal(str: String) extends WirthLexicalToken
+case class NonTerminal(str: String) extends WirthLexicalToken
+case class Special(str: String) extends WirthLexicalToken
+case object EmptySequence extends WirthLexicalToken
 
 object WirthNotation {
   sealed trait WirthState
@@ -26,8 +26,8 @@ object WirthNotation {
 
 }
 
-case class WirthExpression() extends NonDeterministicPushdownAutomata[WirthStuff, Char, WirthState] {
-  override val inputAlphabet: Seq[WirthStuff] = Seq.empty
+case class WirthExpression() extends NonDeterministicPushdownAutomata[WirthLexicalToken, Char, WirthState] {
+  override val inputAlphabet: Seq[WirthLexicalToken] = Seq.empty
   override val stackAlphabet: Seq[Char] = CharAlphabets.Alphanumeric.toSeq
   override val initialStackSymbol: Char = '$'
   override val initialState: WirthState = ExpressionInitial
@@ -35,7 +35,7 @@ case class WirthExpression() extends NonDeterministicPushdownAutomata[WirthStuff
   override val acceptStates: Seq[WirthState] = Seq(ExpressionRecognized)
   override val trapState: WirthState = ExpressionError
 
-  override def transition[S >: WirthState](state: S, inputSymbolOpt: Option[WirthStuff], stackSymbolOpt: Option[Char]): Seq[(S, Seq[Char])] = {
+  override def transition[S >: WirthState](state: S, inputSymbolOpt: Option[WirthLexicalToken], stackSymbolOpt: Option[Char]): Seq[(S, Seq[Char])] = {
     val notChanged = stackSymbolOpt.map(s => Seq(s)).getOrElse(Seq.empty)
     (state, inputSymbolOpt, stackSymbolOpt) match {
       case (ExpressionInitial, Some(Special("(")), Some(stackSymbol)) => (ExpressionInitial, Seq('(', stackSymbol)) :: Nil
@@ -59,8 +59,8 @@ case class WirthExpression() extends NonDeterministicPushdownAutomata[WirthStuff
   }
 }
 
-case class WirthGrammar() extends NonDeterministicPushdownAutomata[WirthStuff, Char, WirthState] {
-  override val inputAlphabet: Seq[WirthStuff] = Seq.empty
+case class WirthGrammar() extends NonDeterministicPushdownAutomata[WirthLexicalToken, Char, WirthState] {
+  override val inputAlphabet: Seq[WirthLexicalToken] = Seq.empty
   override val stackAlphabet: Seq[Char] = CharAlphabets.Alphanumeric.toSeq
   override val initialStackSymbol: Char = '$'
   override val initialState: WirthState = GrammarInit
@@ -68,7 +68,7 @@ case class WirthGrammar() extends NonDeterministicPushdownAutomata[WirthStuff, C
   override val acceptStates: Seq[WirthState] = Seq(RuleRecognized)
   override val trapState: WirthState = ExpressionError
 
-  override def transition[S >: WirthState](state: S, inputSymbolOpt: Option[WirthStuff], stackSymbolOpt: Option[Char]): Seq[(S, Seq[Char])] = {
+  override def transition[S >: WirthState](state: S, inputSymbolOpt: Option[WirthLexicalToken], stackSymbolOpt: Option[Char]): Seq[(S, Seq[Char])] = {
     val notChanged = stackSymbolOpt.map(s => Seq(s)).getOrElse(Seq.empty)
     (state, inputSymbolOpt, stackSymbolOpt) match {
       case (GrammarInit, Some(NonTerminal(nt)), _) => (ExpectingEquals, notChanged) :: Nil
@@ -89,7 +89,6 @@ case class ExpressionParentesis(exp: Expression) extends Expression
 case class ExpressionBrackets(exp: Expression) extends Expression
 case class ExpressionKleene(exp: Expression) extends Expression
 trait Token extends WirthAST
-
 case class NonTerminalToken(nonTerminal: NonTerminal) extends Expression
 case class TerminalToken(terminal: Terminal) extends Expression
 case class Sequence(expressions: Expression*) extends Expression
@@ -109,8 +108,8 @@ object WirthExperimentation {
   import automata.SeqStack._
   val openTokens = Seq("(", "[", "{")
   val closeTokens = Seq(")", "]", "}")
-  case class NextExpression(next: Seq[WirthStuff], rest: Seq[WirthStuff])
-  def getNextExpression(tokenStream: Seq[WirthStuff]): NextExpression = {
+  case class NextExpression(next: Seq[WirthLexicalToken], rest: Seq[WirthLexicalToken])
+  def getNextExpression(tokenStream: Seq[WirthLexicalToken]): NextExpression = {
     tokenStream.headOption match {
       case Some(t) if t.isInstanceOf[Terminal] || t.isInstanceOf[NonTerminal] =>
         NextExpression(Seq(t), tokenStream.drop(1))
@@ -118,7 +117,7 @@ object WirthExperimentation {
         NextExpression(Seq(Special("|")), tokenStream.drop(1))
       case Some(Special(open)) if openTokens.contains(open) =>
 //        println("TOKEN: " + open)
-        val (_, next) = tokenStream.drop(1).foldLeft((Seq(open), Seq[WirthStuff](Special(open)))) {case ((stack, current), newToken) =>
+        val (_, next) = tokenStream.drop(1).foldLeft((Seq(open), Seq[WirthLexicalToken](Special(open)))) {case ((stack, current), newToken) =>
 //          println(stack, current, newToken)
           stack.headOption match {
             case Some(_) =>
@@ -134,7 +133,7 @@ object WirthExperimentation {
       case None => NextExpression(Seq.empty, Seq.empty)
     }
   }
-  type TokenStream = Seq[WirthStuff]
+  type TokenStream = Seq[WirthLexicalToken]
   type ExpressionTokenStream = Seq[TokenStream]
   def getExpressions(tokenStream: TokenStream): ExpressionTokenStream = {
     val NextExpression(next, rest) = getNextExpression(tokenStream)
@@ -144,7 +143,6 @@ object WirthExperimentation {
   }
 
   def splitByOr(expressionTokenStream: ExpressionTokenStream, existing: Seq[ExpressionTokenStream] = Seq.empty): Seq[ExpressionTokenStream] = {
-//    println(expressionTokenStream, existing)
     expressionTokenStream.indexOf(Seq(Special("|"))) match {
       case -1 => existing :+ expressionTokenStream
       case index =>
@@ -172,9 +170,9 @@ object WirthExperimentation {
           expressions.map {
             case Seq(nt: NonTerminal) => NonTerminalToken(nt)
             case Seq(t: Terminal) => TerminalToken(t)
-            case parentesis: Seq[WirthStuff] if parentesis.headOption.contains(Special("(")) && parentesis.lastOption.contains(Special(")")) => ExpressionParentesis(parse(parentesis.drop(1).dropRight(1)))
-            case brackets: Seq[WirthStuff] if brackets.headOption.contains(Special("[")) && brackets.lastOption.contains(Special("]")) => ExpressionBrackets(parse(brackets.drop(1).dropRight(1)))
-            case kleenes: Seq[WirthStuff] if kleenes.headOption.contains(Special("{")) && kleenes.lastOption.contains(Special("}")) => ExpressionKleene(parse(kleenes.drop(1).dropRight(1)))
+            case parentesis: Seq[WirthLexicalToken] if parentesis.headOption.contains(Special("(")) && parentesis.lastOption.contains(Special(")")) => ExpressionParentesis(parse(parentesis.drop(1).dropRight(1)))
+            case brackets: Seq[WirthLexicalToken] if brackets.headOption.contains(Special("[")) && brackets.lastOption.contains(Special("]")) => ExpressionBrackets(parse(brackets.drop(1).dropRight(1)))
+            case kleenes: Seq[WirthLexicalToken] if kleenes.headOption.contains(Special("{")) && kleenes.lastOption.contains(Special("}")) => ExpressionKleene(parse(kleenes.drop(1).dropRight(1)))
           }
         }
     }
@@ -251,16 +249,16 @@ object WirthToNDPA {
   case class RuleInitialState(nonTerminalToken: NonTerminalToken) extends WirthGeneratedState
   case class PartialSequence(id: String, seq: Sequence, done: Int) extends WirthGeneratedState
   case class AcceptSequence(id: String, seq: Sequence) extends WirthGeneratedState
-  def fromSequenceOfTerminals(seq: Sequence): NonDeterministicPushdownAutomata[WirthStuff, StackAlphabet, WirthGeneratedState] = {
+  def fromSequenceOfTerminals(seq: Sequence): NonDeterministicPushdownAutomata[WirthLexicalToken, StackAlphabet, WirthGeneratedState] = {
     fromSequenceOfTerminals(seq, randomUUID().toString)
   }
 
-  def fromSequenceOfTerminals(seq: Sequence, uuid: String): NonDeterministicPushdownAutomata[WirthStuff, StackAlphabet, WirthGeneratedState] = {
+  def fromSequenceOfTerminals(seq: Sequence, uuid: String): NonDeterministicPushdownAutomata[WirthLexicalToken, StackAlphabet, WirthGeneratedState] = {
     require(seq.expressions.forall(e => e.isInstanceOf[TerminalToken]), "SequenceOfTerminals was call and not every expression is a TerminalToken")
     val terminals = seq.expressions.map {case t: TerminalToken => t.terminal}
-    new NonDeterministicPushdownAutomata[WirthStuff, StackAlphabet, WirthGeneratedState] {
+    new NonDeterministicPushdownAutomata[WirthLexicalToken, StackAlphabet, WirthGeneratedState] {
       override val id: String = uuid
-      override val inputAlphabet: Seq[WirthStuff] = Seq.empty
+      override val inputAlphabet: Seq[WirthLexicalToken] = Seq.empty
       override val stackAlphabet: Seq[StackAlphabet] = Seq.empty
       override val initialStackSymbol: StackAlphabet = InitialStackSymbol
       override val initialState: WirthGeneratedState = PartialSequence(uuid, seq, 0)
@@ -268,7 +266,7 @@ object WirthToNDPA {
       override val acceptStates: Seq[WirthGeneratedState] = Seq(AcceptSequence(uuid, seq))
       override val trapState: WirthGeneratedState = TrapState(uuid, seq)
 
-      override def transition[S >: WirthGeneratedState](state: S, inputSymbolOpt: Option[WirthStuff], stackSymbolOpt: Option[StackAlphabet]): Seq[(S, Seq[StackAlphabet])] = {
+      override def transition[S >: WirthGeneratedState](state: S, inputSymbolOpt: Option[WirthLexicalToken], stackSymbolOpt: Option[StackAlphabet]): Seq[(S, Seq[StackAlphabet])] = {
         val notChanged = stackSymbolOpt.map(s => Seq(s)).getOrElse(Seq.empty)
         val x = (state, inputSymbolOpt, stackSymbolOpt) match {
           case (PartialSequence(_, sequence, i), Some(input), _) if sequence == seq && terminals.lift(i).contains(input) && terminals.size == i+1 => (AcceptSequence(uuid, seq), Seq.empty) :: Nil
@@ -311,7 +309,7 @@ object WirthToNDPA {
     x
   }
 
-  def fromNonRecursiveExpression(exp: Expression, context: ExpressionContext): NonDeterministicPushdownAutomata[WirthStuff, StackAlphabet, WirthGeneratedState] = {
+  def fromNonRecursiveExpression(exp: Expression, context: ExpressionContext): NonDeterministicPushdownAutomata[WirthLexicalToken, StackAlphabet, WirthGeneratedState] = {
     exp match {
       case ntt: NonTerminalToken => fromNonRecursiveExpression(context.rules(ntt), context.call(ntt))
       case tt: TerminalToken => fromSequenceOfTerminals(Sequence(tt))
@@ -330,7 +328,7 @@ object WirthToNDPA {
     }
   }
 
-  def fromExpressionWithoutRecursion(exp: Expression, context: ExpressionContext): NonDeterministicPushdownAutomata[WirthStuff, StackAlphabet, WirthGeneratedState] = {
+  def fromExpressionWithoutRecursion(exp: Expression, context: ExpressionContext): NonDeterministicPushdownAutomata[WirthLexicalToken, StackAlphabet, WirthGeneratedState] = {
     println("fromExpressionWithoutRecursion")
     val x = exp match {
       case seq: Sequence if seq.expressions.forall(e =>  e.isInstanceOf[TerminalToken]) =>
@@ -340,7 +338,7 @@ object WirthToNDPA {
       case terminalToken: TerminalToken =>
         fromSequenceOfTerminals(Sequence(terminalToken))
       case or: Or =>
-        val ndpas: Seq[NonDeterministicPushdownAutomata[WirthStuff, StackAlphabet, WirthGeneratedState]] = or.expressions.filterNot(e => WirthExperimentation.nonTerminalsOfExpression(e).exists(exp => context.isRecursive(exp))).map(o => fromExpression(o, context))
+        val ndpas: Seq[NonDeterministicPushdownAutomata[WirthLexicalToken, StackAlphabet, WirthGeneratedState]] = or.expressions.filterNot(e => WirthExperimentation.nonTerminalsOfExpression(e).exists(exp => context.isRecursive(exp))).map(o => fromExpression(o, context))
         ndpas.drop(1).foldLeft(ndpas.head) {case (ndpa1, ndpa2) => NonDeterministicPushdownAutomata.or(ndpa1, ndpa2)}
     }
     x
@@ -366,9 +364,9 @@ object WirthToNDPA {
         or.expressions.map(exp => splitRecursion(exp, exp2stackSymbol)).reduce(_ ++ _)
     }
   }
-  def applyCentralRecursion(ndpa: NonDeterministicPushdownAutomata[WirthStuff, StackAlphabet, WirthGeneratedState],
+  def applyCentralRecursion(ndpa: NonDeterministicPushdownAutomata[WirthLexicalToken, StackAlphabet, WirthGeneratedState],
                             centralRecursion: CentralRecursion[StackAlphabet],
-                            context: ExpressionContext): NonDeterministicPushdownAutomata[WirthStuff, StackAlphabet, WirthGeneratedState] = {
+                            context: ExpressionContext): NonDeterministicPushdownAutomata[WirthLexicalToken, StackAlphabet, WirthGeneratedState] = {
 
     val leftNdpas = centralRecursion.leftMap.map {case (ntt, exp) => ntt -> fromExpressionWithoutRecursion(exp, context)}
     val rightNdpas = centralRecursion.rightMap.map {case (ntt, exp) => ntt -> fromExpressionWithoutRecursion(exp, context)}
@@ -401,7 +399,7 @@ object WirthToNDPA {
       }
     })
   }
-  def fromExpression(exp: Expression, context: ExpressionContext): NonDeterministicPushdownAutomata[WirthStuff, StackAlphabet, WirthGeneratedState] = {
+  def fromExpression(exp: Expression, context: ExpressionContext): NonDeterministicPushdownAutomata[WirthLexicalToken, StackAlphabet, WirthGeneratedState] = {
     println(s"fromExpression: ${WirthExperimentation.expToString(exp)}")
     val ndpa = exp match {
       case seq: Sequence if seq.expressions.forall(e =>  e.isInstanceOf[TerminalToken]) =>
@@ -452,7 +450,7 @@ object WirthToNDPA {
             )
         }
       case or: Or =>
-        val ndpas: Seq[NonDeterministicPushdownAutomata[WirthStuff, StackAlphabet, WirthGeneratedState]] = or.expressions.map(o => fromExpression(o, context))
+        val ndpas: Seq[NonDeterministicPushdownAutomata[WirthLexicalToken, StackAlphabet, WirthGeneratedState]] = or.expressions.map(o => fromExpression(o, context))
         ndpas.drop(1).foldLeft(ndpas.head) {case (ndpa1, ndpa2) => NonDeterministicPushdownAutomata.or(ndpa1, ndpa2)}
       case a =>
         println(a)
@@ -472,7 +470,7 @@ object WirthToNDPA {
     }
   }
 
-  def fromRules(rules: Map[NonTerminalToken, Expression], nonTerminalInitial: NonTerminalToken): NonDeterministicPushdownAutomata[WirthStuff, StackAlphabet, WirthGeneratedState] = {
+  def fromRules(rules: Map[NonTerminalToken, Expression], nonTerminalInitial: NonTerminalToken): NonDeterministicPushdownAutomata[WirthLexicalToken, StackAlphabet, WirthGeneratedState] = {
     fromExpression(rules(nonTerminalInitial), ExpressionContext(Seq(nonTerminalInitial), rules))
   }
 }

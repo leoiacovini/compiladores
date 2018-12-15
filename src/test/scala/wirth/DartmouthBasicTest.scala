@@ -1,6 +1,8 @@
 package wirth
 
-import automata.ndpa.NDPARunner
+import automata.ndpa.{NDPARunner, RunHistoryItem}
+import basic.{BasicToLLVM, Print}
+import llvm.{LLVMProgram, OutputWriter}
 import org.scalatest.{FlatSpec, WordSpec}
 
 class DartmouthBasicTest extends WordSpec {
@@ -8,18 +10,23 @@ class DartmouthBasicTest extends WordSpec {
   val dartmouthBasicRules = Map(
     NonTerminalToken("PROGRAM") ->
       Sequence(
-        NonTerminalToken("PRINT"),
+        NonTerminalToken("STATEMENT"),
         ExpressionKleene(
           Sequence(
-            TerminalToken(";"),
-            NonTerminalToken("PRINT")
+            NonTerminalToken("STATEMENT")
           )
         )
+      ),
+    NonTerminalToken("STATEMENT") ->
+      Sequence(
+        NonTerminalToken("INT"),
+        NonTerminalToken("PRINT")
       ),
     NonTerminalToken("PRINT") ->
       Sequence(
         TerminalToken("PRINT"),
-        NonTerminalToken("PRINTITEM")
+        NonTerminalToken("PRINTITEM"),
+        TerminalToken(";"),
       ),
     NonTerminalToken("PRINTITEM") ->
       Sequence(
@@ -31,6 +38,26 @@ class DartmouthBasicTest extends WordSpec {
       Or(
         TerminalToken("a"),
         TerminalToken("b")
+      ),
+    NonTerminalToken("INT") ->
+      Sequence(
+        NonTerminalToken("DIGIT"),
+        ExpressionKleene(
+          NonTerminalToken("DIGIT")
+        )
+      ),
+    NonTerminalToken("DIGIT") ->
+      Or(
+        TerminalToken("0"),
+        TerminalToken("1"),
+        TerminalToken("2"),
+        TerminalToken("3"),
+        TerminalToken("4"),
+        TerminalToken("5"),
+        TerminalToken("6"),
+        TerminalToken("7"),
+        TerminalToken("8"),
+        TerminalToken("9")
       ),
     NonTerminalToken("ASSIGNMENT") ->
       Sequence(
@@ -107,9 +134,29 @@ class DartmouthBasicTest extends WordSpec {
       val dartmouthNDPA = WirthToNDPA.fromRules(dartmouthBasicRules, root)
       val runner = NDPARunner.fromNDPA(dartmouthNDPA)
 
-      assert(runner.accepts(Seq(Terminal("PRINT"), Terminal("\""), Terminal("a"), Terminal("\""))))
-      val run = runner.runAll(Seq(Terminal("PRINT"), Terminal("\""), Terminal("a"), Terminal("\"")))
-      println(run.debugString)
+      val input = Seq(Terminal("1"), Terminal("1"), Terminal("PRINT"), Terminal("\""), Terminal("a"), Terminal("\""), Terminal(";"))
+      val input2 = input ++ input
+      assert(runner.accepts(input))
+      assert(runner.accepts(input2))
+      val run = runner.runAll(input)
+      val run2 = runner.runAll(input2)
+//      println(run.debugString)
+      run2.getAcceptedRunState.foreach { runState =>
+        println(runState.history.map(_.debugString).mkString("\n"))
+      }
+
+      val history = run2.getAcceptedRunState.map(_.history).getOrElse(Seq.empty)
+      val x = run2.getAcceptedRunState.map(_.history).getOrElse(Seq.empty).map(_.inputSymbolOpt)
+      val abc: Map[Int, Seq[RunHistoryItem[WirthToNDPA.WirthGeneratedState, WirthLexicalToken, WirthToNDPA.StackAlphabet]]] = history.zipWithIndex.groupBy {case (_, index) =>
+        history.drop(index).count(h => h.inputSymbolOpt.contains(Terminal(";")))
+      }.mapValues {x => x.map(_._1)}
+
+      val lLVMProgram: LLVMProgram = abc.mapValues(BasicToLLVM.getCommand).toSeq.sortBy(_._1).map(_._2).foldLeft(LLVMProgram.empty) {case (llvm, print: Print) =>
+        BasicToLLVM.addPrint(llvm, print)
+      }
+
+      println(lLVMProgram.toString)
+      OutputWriter.write(lLVMProgram, "teste2.ll")
     }
   }
 }
