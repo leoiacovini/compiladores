@@ -55,7 +55,7 @@ object ConsumeChars {
     event.state.ndfaRunner match {
       // If are in the middle of a automate cycle
       case Some(_: NDFARunner[Char, _]) => processNdfa(event)
-      // It's the first chars os a possible sequence, we need to start a new common.automata
+      // It's the first chars os a possible sequence, we need to start a new common.common.automata
       case None => startNewNdfa(event)
     }
   }

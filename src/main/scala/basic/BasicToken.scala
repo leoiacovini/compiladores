@@ -1,4 +1,4 @@
-package basic
+package basictoken
 
 trait BasicToken {
   val literal: String

@@ -13,6 +13,10 @@ case class NDFARunner[Input, State](ndfa: NonDeterministicFiniteAutomata[Input, 
     } yield newStates
   }
 
+  def runAll(inputs: Seq[Input]): NDFARunner[Input, State] = {
+    inputs.foldLeft(this) {case (runner, input) => runner.withStates(runner.run(input))}
+  }
+
   def withStates(newStates: Seq[State]): NDFARunner[Input, State] = copy(currentStates = newStates)
   def isAccepted: Boolean = {
     currentStates.exists(ndfa.acceptStates.contains)

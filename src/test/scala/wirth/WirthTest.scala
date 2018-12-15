@@ -52,7 +52,7 @@ class WirthTest extends WordSpec {
     }
 
     "foo" in {
-      val x1 = Seq[(WirthState, Option[WirthStuff], Option[Char])](
+      val x1 = Seq[(WirthState, Option[WirthLexicalToken], Option[Char])](
         (ExpressionInitial, Some(Special("(")), Some('$')),
           (ExpressionInitial, Some(NonTerminal("foo")), Some('(')),
           (ExpressionRecognized, Some(Special("|")), Some('(')),
@@ -217,7 +217,7 @@ class WirthTest extends WordSpec {
       val wirthNDPA = WirthToNDPA.fromRules(rules, root)
 
       val runner = NDPARunner.fromNDPA(wirthNDPA)
-      val x: NDPARunner[WirthStuff, StackAlphabet, WirthGeneratedState] = runner.run(Some(Terminal("b")))
+      val x: NDPARunner[WirthLexicalToken, StackAlphabet, WirthGeneratedState] = runner.run(Some(Terminal("b")))
       println(x.debugString)
 //
       assert(runner.accepts(Seq(Terminal("b"), Terminal("a"))))
@@ -266,8 +266,8 @@ class WirthTest extends WordSpec {
         TerminalToken("a")
       )
       val rules = Map(root -> autoRecursion)
-      val wirthNDPA: NonDeterministicPushdownAutomata[WirthStuff, StackAlphabet, WirthGeneratedState] = WirthToNDPA.fromRules(rules, root)
-      val inputAlphabet: Seq[Option[WirthStuff]] = Seq(None, Some(Terminal("(")), Some(Terminal("a")), Some(Terminal(")")))
+      val wirthNDPA: NonDeterministicPushdownAutomata[WirthLexicalToken, StackAlphabet, WirthGeneratedState] = WirthToNDPA.fromRules(rules, root)
+      val inputAlphabet: Seq[Option[WirthLexicalToken]] = Seq(None, Some(Terminal("(")), Some(Terminal("a")), Some(Terminal(")")))
       val stackAlphabet: Seq[Option[StackAlphabet]] = Seq(None, Some(InitialStackSymbol), Some(CentralAutoRecursion("(")))
       val tries = for { input <- inputAlphabet
                         stack <- stackAlphabet
@@ -431,7 +431,7 @@ class WirthTest extends WordSpec {
 //      }
 //    }
 
-    val inputAlphabet: Seq[Option[WirthStuff]] = Seq(None, Some(Terminal("(")), Some(Terminal("a")), Some(Terminal("b")), Some(Terminal("c")), Some(Terminal(")")))
+    val inputAlphabet: Seq[Option[WirthLexicalToken]] = Seq(None, Some(Terminal("(")), Some(Terminal("a")), Some(Terminal("b")), Some(Terminal("c")), Some(Terminal(")")))
     val stackAlphabet: Seq[Option[StackAlphabet]] = Seq(None, Some(InitialStackSymbol), Some(CentralAutoRecursion("(")))
     val tries = for { input <- inputAlphabet
                         stack <- stackAlphabet

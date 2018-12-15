@@ -57,7 +57,7 @@ class NonDeterministicFiniteAutomataTest extends WordSpec {
       assert(!NonDeterministicFiniteAutomata.accepts(newNDFA, "abddef"))
     }
 
-    "or common.automata into (abc*|def)" in {
+    "or common.common.automata into (abc*|def)" in {
       val newNDFA = NonDeterministicFiniteAutomata.or(ndfa, ndfa2)
       assert(NonDeterministicFiniteAutomata.accepts(newNDFA, "abc"))
       assert(NonDeterministicFiniteAutomata.accepts(newNDFA, "abcc"))
@@ -67,7 +67,7 @@ class NonDeterministicFiniteAutomataTest extends WordSpec {
       assert(!NonDeterministicFiniteAutomata.accepts(newNDFA, "deff"))
     }
 
-    "repeat common.automata into (abc*)*" in {
+    "repeat common.common.automata into (abc*)*" in {
       val newNDFA = NonDeterministicFiniteAutomata.repeat(ndfa)
 
       assert(NonDeterministicFiniteAutomata.accepts(newNDFA, ""))
