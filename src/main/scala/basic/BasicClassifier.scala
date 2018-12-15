@@ -25,4 +25,10 @@ object BasicClassifier {
     }
   }
 
+  def classifyLine(lexicalSeq: Seq[LexicalToken]): Seq[BasicToken] = {
+    val lineNumber = lexicalSeq.head
+    val commandLine = lexicalSeq.tail
+    commandLine.map(classifyToken) :+ BasicToken.LineNumber(lineNumber.rawValue)
+  }
+
 }
