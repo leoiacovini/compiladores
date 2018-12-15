@@ -1,9 +1,11 @@
 package basic
 
-abstract case class BasicToken(literal: String)
+trait BasicToken {
+  val literal: String
+}
 
 // Keywords
-case class Keyword(override val literal: String) extends BasicToken(literal)
+case class Keyword(literal: String) extends BasicToken(literal)
 case class Read(override val literal: String) extends Keyword(literal)
 case class Data(override val literal: String) extends Keyword(literal)
 case class Print(override val literal: String) extends Keyword(literal)
@@ -23,7 +25,7 @@ case class Def(override val literal: String) extends Keyword(literal)
 case class GoSub(override val literal: String) extends Keyword(literal)
 
 // Others
-case class Operator(override val literal: String) extends BasicToken(literal)
-case class Delimiter(override val literal: String) extends BasicToken(literal)
-case class Identifier(override val literal: String) extends BasicToken(literal)
-case class Number(override val literal: String) extends BasicToken(literal)
+case class Operator(literal: String) extends BasicToken(literal)
+case class Delimiter(literal: String) extends BasicToken(literal)
+case class Identifier(literal: String) extends BasicToken(literal)
+case class Number(literal: String) extends BasicToken(literal)
