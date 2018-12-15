@@ -25,6 +25,8 @@ object BasicToken {
 
   case class Rem(override val literal: String = "REM") extends Keyword(literal)
 
+  case class If(override val literal: String = "IF") extends Keyword(literal)
+
   case class Then(override val literal: String = "THEN") extends Keyword(literal)
 
   case class Fn(override val literal: String = "FN") extends Keyword(literal)
@@ -50,6 +52,9 @@ object BasicToken {
 
   case class Identifier(literal: String) extends BasicToken
 
+  case class Text(literal: String) extends BasicToken
+
   case class Number(literal: String) extends BasicToken
 
+  case class LineNumber(literal: String) extends BasicToken
 }
