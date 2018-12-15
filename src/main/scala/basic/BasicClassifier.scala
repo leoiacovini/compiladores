@@ -1,9 +1,11 @@
 package basic
 
-class Classifier {
+import common.automata.LexicalToken
 
-  def classifyToken(literal: String): BasicToken = {
-    literal.toUpperCase() match {
+object BasicClassifier {
+
+  def classifyToken(lexicalToken: LexicalToken): BasicToken = {
+    lexicalToken.rawValue.toUpperCase() match {
       case "LET" => BasicToken.Let()
       case "RETURN" => BasicToken.Return()
       case "GOSUB" => BasicToken.GoSub()
@@ -20,7 +22,6 @@ class Classifier {
       case "DIM" => BasicToken.Dim()
       case "END" => BasicToken.End()
       case "DEF" => BasicToken.Def()
-      case _ => BasicToken.Keyword(literal)
     }
   }
 

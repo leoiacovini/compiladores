@@ -7,7 +7,7 @@ trait BasicToken {
 object BasicToken {
 
   // Keywords
-  case class Keyword(literal: String) extends BasicToken(literal)
+  abstract class Keyword(literal: String) extends BasicToken
 
   case class Read(override val literal: String = "READ") extends Keyword(literal)
 
@@ -44,12 +44,12 @@ object BasicToken {
   case class GoSub(override val literal: String = "GOSUB") extends Keyword(literal)
 
   // Others
-  case class Operator(literal: String) extends BasicToken(literal)
+  case class Operator(literal: String) extends BasicToken
 
-  case class Delimiter(literal: String) extends BasicToken(literal)
+  case class Delimiter(literal: String) extends BasicToken
 
-  case class Identifier(literal: String) extends BasicToken(literal)
+  case class Identifier(literal: String) extends BasicToken
 
-  case class Number(literal: String) extends BasicToken(literal)
+  case class Number(literal: String) extends BasicToken
 
 }

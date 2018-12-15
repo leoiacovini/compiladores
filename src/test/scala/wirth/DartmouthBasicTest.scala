@@ -1,8 +1,8 @@
 package wirth
 
-import basic.{BasicToLLVM, Print}
+import basic.{BasicToLLVM, DPrint}
 import llvm.{LLVMProgram, OutputWriter}
-import common.automata.ndpa.NDPARunner
+import common.automata.ndpa.{NDPARunner, RunHistoryItem}
 import org.scalatest.{FlatSpec, WordSpec}
 
 class DartmouthBasicTest extends WordSpec {
@@ -151,7 +151,7 @@ class DartmouthBasicTest extends WordSpec {
         history.drop(index).count(h => h.inputSymbolOpt.contains(Terminal(";")))
       }.mapValues {x => x.map(_._1)}
 
-      val lLVMProgram: LLVMProgram = abc.mapValues(BasicToLLVM.getCommand).toSeq.sortBy(_._1).map(_._2).foldLeft(LLVMProgram.empty) {case (llvm, print: Print) =>
+      val lLVMProgram: LLVMProgram = abc.mapValues(BasicToLLVM.getCommand).toSeq.sortBy(_._1).map(_._2).foldLeft(LLVMProgram.empty) {case (llvm, print: DPrint) =>
         BasicToLLVM.addPrint(llvm, print)
       }
 
