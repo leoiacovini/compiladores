@@ -45,9 +45,7 @@ object BasicToken {
 
   case class GoSub(override val literal: String = "GOSUB") extends Keyword(literal)
 
-  // Others
-  case class Operator(literal: String) extends BasicToken
-
+  // Other
   case class Delimiter(literal: String) extends BasicToken
 
   case class Identifier(literal: String) extends BasicToken
@@ -57,4 +55,19 @@ object BasicToken {
   case class Number(literal: String) extends BasicToken
 
   case class LineNumber(literal: String) extends BasicToken
+
+  // Operator
+  trait Operator extends BasicToken
+  case class Plus(literal: String = "+") extends Operator
+  case class Minus(literal: String = "-") extends Operator
+  case class Multiply(literal: String = "*") extends Operator
+  case class Divide(literal: String = "/") extends Operator
+
+
+  // Comparator
+  class Comparator(val literal: String) extends BasicToken
+  case class Equal() extends Comparator("=")
+  case class Different() extends Comparator("!=")
+  case class Greater() extends Comparator(">")
+  case class Lesser() extends Comparator("<")
 }

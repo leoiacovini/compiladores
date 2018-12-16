@@ -3,10 +3,10 @@ package basic
 trait BasicCommand
 object BasicCommand {
 
-  case class Assign(varName: BasicToken.Identifier, exp: Seq[BasicToken])
+  case class Assign(varName: BasicToken.Identifier, exp: Seq[BasicToken]) extends BasicCommand
   case class Print(items: Seq[BasicToken]) extends BasicCommand
   case class Goto(lineNumber: BasicToken.Number) extends BasicCommand
-  case class If(exp1: Seq[BasicToken], exp2: Seq[BasicToken], compareOperator: BasicToken.Operator, thenInt: BasicToken.Number) extends BasicCommand
+  case class If(exp1: Seq[BasicToken], exp2: Seq[BasicToken], comparator: BasicToken.Comparator, thenInt: BasicToken.Number) extends BasicCommand
   case class Read(vars: Seq[BasicToken.Identifier]) extends BasicCommand
   case class Data(values: Seq[BasicToken]) extends BasicCommand
   case class For(varName: BasicToken.Identifier, to: BasicToken, step: BasicToken) extends BasicCommand
@@ -31,7 +31,9 @@ object BasicCommand {
   }
 
   def tokensLineToData(commandLine: Seq[BasicToken]): BasicCommand.Data = commandLine match {
-    case Seq(_data, tail @ _*) => Data(tail)
+    case Seq(_data, tail @ _*) =>
+      val items = tail.partition(b => b.isInstanceOf[BasicToken.Delimiter])
+      Data(items._2)
   }
 
   def tokensLineToGoto(commandLine: Seq[BasicToken]): BasicCommand.Goto = commandLine match {
@@ -52,19 +54,20 @@ object BasicCommand {
 
   def tokensLineToIf(commandLine: Seq[BasicToken]): BasicCommand.If = {
     val withoutIf = commandLine.tail
-    val operatorIndex = withoutIf.indexOf(BasicToken.Operator(_))
-    val operatorSplit = withoutIf.splitAt(operatorIndex)
+    val comparator = withoutIf.collectFirst { case comp: BasicToken.Comparator => comp }.get
+    val comparatorIndex = withoutIf.indexOf(comparator)
+    val operatorSplit = withoutIf.splitAt(comparatorIndex)
     val exp1 = operatorSplit._1
     val restAfterOperator = operatorSplit._2.tail
-    val thenIndex = restAfterOperator.indexOf(BasicToken.Then(_))
+    val thenIndex = restAfterOperator.indexOf(BasicToken.Then())
     val thenSplit = restAfterOperator.splitAt(thenIndex)
     val exp2 = thenSplit._1
     val thenInt = thenSplit._2(1)
-    BasicCommand.If(exp1, exp2, withoutIf(operatorIndex).asInstanceOf[BasicToken.Operator], thenInt.asInstanceOf[BasicToken.Number])
+    BasicCommand.If(exp1, exp2, comparator, thenInt.asInstanceOf[BasicToken.Number])
   }
 
   def fromTokensLine(commandLine: Seq[BasicToken]): BasicCommand = {
-    val command = commandLine.head match {
+    commandLine.head match {
       case BasicToken.Let(_) => tokensLineToAssign(commandLine)
       case BasicToken.Read(_) => tokensLineToRead(commandLine)
       case BasicToken.Print(_) => tokensLineToPrint(commandLine)
@@ -75,6 +78,5 @@ object BasicCommand {
       case BasicToken.Next(_) => tokensLineToNext(commandLine)
       case BasicToken.If(_) => tokensLineToIf(commandLine)
     }
-    command.asInstanceOf[BasicCommand]
   }
 }

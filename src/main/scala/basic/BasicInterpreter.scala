@@ -16,23 +16,23 @@ class SymbolTable {
 
 }
 
-class BasicInterpreter(basicProgram: Seq[BasicStatement]) {
-
-  val symbolTable: SymbolTable = new SymbolTable()
-
-  def executePrint(items: Seq[BasicToken]): Unit = {
-    items.foreach {
-      case BasicToken.Identifier(id) => print(symbolTable.getValue(id))
-      case item => print(item.literal)
-    }
-  }
-
-  def execute(): Unit = {
-    basicProgram.foreach{ statement => {
-      statement.command match {
-        case BasicCommand.Print(items) => executePrint(items)
-      }
-    }}
-  }
-
-}
+//class BasicInterpreter(basicProgram: Seq[BasicStatement]) {
+//
+//  val symbolTable: SymbolTable = new SymbolTable()
+//
+//  def executePrint(items: Seq[BasicToken]): Unit = {
+//    items.foreach {
+//      case BasicToken.Identifier(id) => print(symbolTable.getValue(id))
+//      case item => print(item.literal)
+//    }
+//  }
+//
+//  def execute(): Unit = {
+//    basicProgram.foreach{ statement => {
+//      statement.command match {
+//        case BasicCommand.Print(items) => executePrint(items)
+//      }
+//    }}
+//  }
+//
+//}
