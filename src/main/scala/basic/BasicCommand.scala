@@ -9,7 +9,7 @@ object BasicCommand {
   case class If(exp1: Seq[BasicToken], exp2: Seq[BasicToken], comparator: BasicToken.Comparator, thenInt: BasicToken.Number) extends BasicCommand
   case class Read(vars: Seq[BasicToken.Identifier]) extends BasicCommand
   case class Data(values: Seq[BasicToken]) extends BasicCommand
-  case class For(varName: BasicToken.Identifier, initialExp: Seq[BasicToken], toExp: Seq[BasicToken]) extends BasicCommand
+  case class For(varName: BasicToken.Identifier, initialExp: Seq[BasicToken], toExp: Seq[BasicToken], step: Option[Seq[BasicToken]] = None) extends BasicCommand
   case class Next(varName: BasicToken.Identifier) extends BasicCommand
   case class GoSub(number: BasicToken.Number) extends BasicCommand
   case class Return() extends BasicCommand
@@ -56,7 +56,16 @@ object BasicCommand {
     case Seq(_for, varName: BasicToken.Identifier, _equal: BasicToken.Equal, tail @_*) =>
       val toIndex = tail.indexOf(BasicToken.To())
       val (exp1, exp2PlusTo) = tail.splitAt(toIndex)
-      For(varName, exp1, exp2PlusTo.tail)
+
+      val exp2AndStep = exp2PlusTo.tail
+      val stepIndex = exp2AndStep.indexOf(BasicToken.Step())
+      if (stepIndex == -1) {
+        For(varName, exp1, exp2PlusTo.tail)
+      } else {
+        val (exp2, stepExp) = exp2AndStep.splitAt(stepIndex)
+        For(varName, exp1, exp2, Some(stepExp.tail))
+      }
+
   }
 
   def tokensLineToIf(commandLine: Seq[BasicToken]): BasicCommand.If = {

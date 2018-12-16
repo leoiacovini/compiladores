@@ -46,7 +46,7 @@ object BasicToken {
   case class GoSub(override val literal: String = "GOSUB") extends Keyword(literal)
 
   // Other
-  case class Delimiter(literal: String) extends BasicToken
+  case class Delimiter(literal: String = ",") extends BasicToken
 
   case class Identifier(literal: String) extends BasicToken
 
@@ -65,9 +65,9 @@ object BasicToken {
 
 
   // Comparator
-  class Comparator(val literal: String) extends BasicToken
-  case class Equal() extends Comparator("=")
-  case class Different() extends Comparator("!=")
-  case class Greater() extends Comparator(">")
-  case class Lesser() extends Comparator("<")
+  trait Comparator extends BasicToken
+  case class Equal(literal: String = "=") extends Comparator
+  case class Different(literal: String = "!=") extends Comparator
+  case class Greater(literal: String = ">") extends Comparator
+  case class Lesser(literal: String = "<") extends Comparator
 }

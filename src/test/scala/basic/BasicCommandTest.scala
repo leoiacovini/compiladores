@@ -138,6 +138,24 @@ class BasicCommandTest extends WordSpec {
         BasicToken.Identifier("A"),
         Seq(BasicToken.Identifier("X"), BasicToken.Plus(), BasicToken.Number("1")),
         Seq(BasicToken.Number("20"))))
+
+    val forWithStepCommand = Seq(
+      BasicToken.For(),
+      BasicToken.Identifier("A"),
+      BasicToken.Equal(),
+      BasicToken.Identifier("X"),
+      BasicToken.To(),
+      BasicToken.Number("20"),
+      BasicToken.Step(),
+      BasicToken.Number("2")
+    )
+
+    assert(BasicCommand.fromTokensLine(forWithStepCommand) ==
+      BasicCommand.For(
+        BasicToken.Identifier("A"),
+        Seq(BasicToken.Identifier("X")),
+        Seq(BasicToken.Number("20")),
+        Some(Seq(BasicToken.Number("2")))))
   }
 
   "Remark Command" in {
