@@ -1,23 +1,35 @@
 package basic
 
+import scala.collection.mutable.ListBuffer
+
 trait BasicCommand
 object BasicCommand {
 
-  case class Assign(varName: BasicToken.Identifier, exp: Seq[BasicToken]) extends BasicCommand
-  case class Print(items: Seq[BasicToken]) extends BasicCommand
+  case class Assign(varName: BasicToken.Identifier, exp: Expression) extends BasicCommand
+  case class Print(items: Seq[Expression]) extends BasicCommand
   case class Goto(lineNumber: BasicToken.Number) extends BasicCommand
-  case class If(exp1: Seq[BasicToken], exp2: Seq[BasicToken], comparator: BasicToken.Comparator, thenInt: BasicToken.Number) extends BasicCommand
+  case class If(exp1: Expression, exp2: Expression, comparator: BasicToken.Comparator, thenInt: BasicToken.Number) extends BasicCommand
   case class Read(vars: Seq[BasicToken.Identifier]) extends BasicCommand
   case class Data(values: Seq[BasicToken]) extends BasicCommand
-  case class For(varName: BasicToken.Identifier, initialExp: Seq[BasicToken], toExp: Seq[BasicToken], step: Option[Seq[BasicToken]] = None) extends BasicCommand
+  case class For(varName: BasicToken.Identifier, initialExp: Expression, toExp: Expression, step: Option[Expression] = None) extends BasicCommand
   case class Next(varName: BasicToken.Identifier) extends BasicCommand
   case class GoSub(number: BasicToken.Number) extends BasicCommand
   case class Return() extends BasicCommand
   case class Remark(comment: BasicToken.Text) extends BasicCommand
 
+  def splitBySeparator[T]( l: Seq[T], sep: T ): Seq[Seq[T]] = {
+    val b = ListBuffer(ListBuffer[T]())
+    l foreach { e =>
+      if ( e == sep ) {
+        if  ( b.last.nonEmpty ) b += ListBuffer[T]()
+      }
+      else b.last += e
+    }
+    b.map(_.toSeq)
+  }
 
   def tokensLineToAssign(commandLine: Seq[BasicToken]): BasicCommand.Assign = commandLine match {
-    case Seq(_let, varName: BasicToken.Identifier, _equal, tail @ _*) => Assign(varName, tail)
+    case Seq(_let, varName: BasicToken.Identifier, _equal, tail @ _*) => Assign(varName, Expression(tail:_*))
   }
 
   def tokensLineToRead(commandLine: Seq[BasicToken]): BasicCommand.Read = commandLine match {
@@ -26,8 +38,8 @@ object BasicCommand {
 
   def tokensLineToPrint(commandLine: Seq[BasicToken]): BasicCommand.Print = commandLine match {
     case Seq(_print, tail @ _*) =>
-      val items = tail.partition(b => b.isInstanceOf[BasicToken.Delimiter])
-      Print(items._2)
+      val items = splitBySeparator[BasicToken](tail.toList, BasicToken.Delimiter())
+      Print(items.map(i => Expression(i:_*)))
   }
 
   def tokensLineToData(commandLine: Seq[BasicToken]): BasicCommand.Data = commandLine match {
@@ -60,10 +72,10 @@ object BasicCommand {
       val exp2AndStep = exp2PlusTo.tail
       val stepIndex = exp2AndStep.indexOf(BasicToken.Step())
       if (stepIndex == -1) {
-        For(varName, exp1, exp2PlusTo.tail)
+        For(varName, Expression(exp1:_*), Expression(exp2PlusTo.tail:_*))
       } else {
         val (exp2, stepExp) = exp2AndStep.splitAt(stepIndex)
-        For(varName, exp1, exp2, Some(stepExp.tail))
+        For(varName, Expression(exp1:_*), Expression(exp2:_*), Some(Expression(stepExp.tail:_*)))
       }
 
   }
@@ -79,7 +91,7 @@ object BasicCommand {
     val thenSplit = restAfterOperator.splitAt(thenIndex)
     val exp2 = thenSplit._1
     val thenInt = thenSplit._2(1)
-    BasicCommand.If(exp1, exp2, comparator, thenInt.asInstanceOf[BasicToken.Number])
+    BasicCommand.If(Expression(exp1:_*), Expression(exp2:_*), comparator, thenInt.asInstanceOf[BasicToken.Number])
   }
 
   def fromTokensLine(commandLine: Seq[BasicToken]): BasicCommand = {

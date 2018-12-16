@@ -13,7 +13,8 @@ class BasicCommandTest extends WordSpec {
     )
 
     assert(BasicCommand.fromTokensLine(printCommand) ==
-      BasicCommand.Print(Seq(BasicToken.Number("10"), BasicToken.Number("20"))))
+      BasicCommand.Print(
+        Seq(Expression(BasicToken.Number("10")), Expression(BasicToken.Number("20")))))
   }
 
   "Assign Command" in {
@@ -25,7 +26,9 @@ class BasicCommandTest extends WordSpec {
     )
 
     assert(BasicCommand.fromTokensLine(assignCommand) ==
-      BasicCommand.Assign(BasicToken.Identifier("J"), Seq(BasicToken.Number("20"))))
+      BasicCommand.Assign(
+        BasicToken.Identifier("J"),
+        Expression(BasicToken.Number("20"))))
 
     val assignExpression = Seq(
       BasicToken.Let(),
@@ -37,7 +40,9 @@ class BasicCommandTest extends WordSpec {
     )
 
     assert(BasicCommand.fromTokensLine(assignExpression) ==
-      BasicCommand.Assign(BasicToken.Identifier("J"), Seq(BasicToken.Number("20"), BasicToken.Plus(), BasicToken.Identifier("A"))))
+      BasicCommand.Assign(
+        BasicToken.Identifier("J"),
+        Expression(BasicToken.Number("20"), BasicToken.Plus(), BasicToken.Identifier("A"))))
   }
 
   "Goto Command" in {
@@ -61,7 +66,10 @@ class BasicCommandTest extends WordSpec {
     )
 
     assert(BasicCommand.fromTokensLine(readCommand) ==
-      BasicCommand.Read(Seq(BasicToken.Identifier("A1"), BasicToken.Identifier("A2"), BasicToken.Identifier("A3"))))
+      BasicCommand.Read(Seq(
+        BasicToken.Identifier("A1"),
+        BasicToken.Identifier("A2"),
+        BasicToken.Identifier("A3"))))
   }
 
   "Data Command" in {
@@ -75,7 +83,10 @@ class BasicCommandTest extends WordSpec {
     )
 
     assert(BasicCommand.fromTokensLine(dataCommand) ==
-      BasicCommand.Data(Seq(BasicToken.Number("10"), BasicToken.Number("20"), BasicToken.Number("30"))))
+      BasicCommand.Data(Seq(
+        BasicToken.Number("10"),
+        BasicToken.Number("20"),
+        BasicToken.Number("30"))))
   }
 
   "Gosub Command" in {
@@ -115,8 +126,8 @@ class BasicCommandTest extends WordSpec {
 
     assert(BasicCommand.fromTokensLine(ifCommand) ==
       BasicCommand.If(
-        Seq(BasicToken.Identifier("A")),
-        Seq(BasicToken.Number("10")),
+        Expression(BasicToken.Identifier("A")),
+        Expression(BasicToken.Number("10")),
         BasicToken.Greater(),
         BasicToken.Number("20")))
   }
@@ -136,8 +147,8 @@ class BasicCommandTest extends WordSpec {
     assert(BasicCommand.fromTokensLine(forCommand) ==
       BasicCommand.For(
         BasicToken.Identifier("A"),
-        Seq(BasicToken.Identifier("X"), BasicToken.Plus(), BasicToken.Number("1")),
-        Seq(BasicToken.Number("20"))))
+        Expression(BasicToken.Identifier("X"), BasicToken.Plus(), BasicToken.Number("1")),
+        Expression(BasicToken.Number("20"))))
 
     val forWithStepCommand = Seq(
       BasicToken.For(),
@@ -153,9 +164,9 @@ class BasicCommandTest extends WordSpec {
     assert(BasicCommand.fromTokensLine(forWithStepCommand) ==
       BasicCommand.For(
         BasicToken.Identifier("A"),
-        Seq(BasicToken.Identifier("X")),
-        Seq(BasicToken.Number("20")),
-        Some(Seq(BasicToken.Number("2")))))
+        Expression(BasicToken.Identifier("X")),
+        Expression(BasicToken.Number("20")),
+        Some(Expression(BasicToken.Number("2")))))
   }
 
   "Remark Command" in {
