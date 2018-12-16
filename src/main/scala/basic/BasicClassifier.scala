@@ -5,10 +5,12 @@ import common.automata.LexicalToken
 object BasicClassifier {
 
   def classifyToken(lexicalToken: LexicalToken): BasicToken = {
+
     lexicalToken.typ.toUpperCase match {
       case "NUMBER" => BasicToken.Number(lexicalToken.rawValue)
+      case "INTEGER" => BasicToken.Number(lexicalToken.rawValue)
       case "TEXT" => BasicToken.Text(lexicalToken.rawValue)
-      case "IDENTIFIER" => BasicToken.Identifier(lexicalToken.rawValue)
+      case "VARIABLENAME" => BasicToken.Identifier(lexicalToken.rawValue)
       case _ => lexicalToken.rawValue.toUpperCase() match {
         case "LET" => BasicToken.Let()
         case "RETURN" => BasicToken.Return()
@@ -33,7 +35,7 @@ object BasicClassifier {
         case "=" => BasicToken.Equal()
         case ">" => BasicToken.Greater()
         case "<" => BasicToken.Lesser()
-        case "!=" => BasicToken.Different()
+        case "<>" => BasicToken.Different()
         case "," => BasicToken.Delimiter()
       }
     }
@@ -42,7 +44,7 @@ object BasicClassifier {
   def classifyLine(lexicalSeq: Seq[LexicalToken]): Seq[BasicToken] = {
     val lineNumber = lexicalSeq.head
     val commandLine = lexicalSeq.tail
-    commandLine.map(classifyToken) :+ BasicToken.LineNumber(lineNumber.rawValue)
+    BasicToken.LineNumber(lineNumber.rawValue) +: commandLine.map(classifyToken)
   }
 
   def createStatement(lexicalTokens: Seq[LexicalToken]): BasicStatement = {
