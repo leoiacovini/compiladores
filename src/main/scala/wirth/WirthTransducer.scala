@@ -49,7 +49,6 @@ class WirthTransducer extends Transducer {
         "OtherSymbols" -> nextOtherSymbolsRunner
       )
       val nextLexicalToken = (lexical :: lexicalTerminal :: lexicalNonTerminal :: lexicalOtherSymbols :: Nil).collectFirst { case Some(lt) => lt }
-
       (nextState, nextLexicalToken)
     } match {
       case (_, Some(lexicalToken)) =>

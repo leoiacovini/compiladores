@@ -128,6 +128,36 @@ class WirthTest extends WordSpec {
   }
 
   "NDPA from Wirth" must {
+    "Integers" in {
+      val rules = Map(
+        NonTerminalToken("INTEGER") -> Sequence(
+          NonTerminalToken("DIGIT"),
+          ExpressionKleene(NonTerminalToken("DIGIT"))
+        ),
+        NonTerminalToken("DIGIT") -> Or(
+          TerminalToken("0"),
+          TerminalToken("1"),
+          TerminalToken("2"),
+          TerminalToken("3"),
+          TerminalToken("4"),
+          TerminalToken("5"),
+          TerminalToken("6"),
+          TerminalToken("7"),
+          TerminalToken("8"),
+          TerminalToken("9"))
+      )
+
+      val wirthNDPA = WirthToNDPA.fromRules(rules, NonTerminalToken("INTEGER"))
+
+      val runner = NDPARunner.fromNDPA(wirthNDPA)
+
+      val seq = Seq(
+        Terminal("1"),
+        Terminal("0"),
+        Terminal("1")
+      )
+      assert(runner.accepts(seq))
+    }
     "sequence of terminals" in {
       val seqOfTerminals = Sequence(
         TerminalToken(Terminal("a")),
