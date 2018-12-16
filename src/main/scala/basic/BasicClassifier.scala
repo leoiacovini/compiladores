@@ -28,6 +28,8 @@ object BasicClassifier {
         case "DIM" => BasicToken.Dim()
         case "END" => BasicToken.End()
         case "DEF" => BasicToken.Def()
+        case "(" => BasicToken.OpenParenthesis()
+        case ")" => BasicToken.CloseParenthesis()
         case "+" => BasicToken.Plus()
         case "-" => BasicToken.Minus()
         case "*" => BasicToken.Multiply()

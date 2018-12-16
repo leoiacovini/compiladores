@@ -72,7 +72,7 @@ object BasicToken {
   // Comparator
   trait Comparator extends BasicToken
   case class Equal(literal: String = "=") extends Comparator
-  case class Different(literal: String = "!=") extends Comparator
+  case class Different(literal: String = "<>") extends Comparator
   case class Greater(literal: String = ">") extends Comparator
   case class Lesser(literal: String = "<") extends Comparator
 }
