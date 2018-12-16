@@ -8,7 +8,7 @@ class BasicToLLVMTest extends WordSpec {
 
   "A test" in {
     val llvm = LLVMProgram.empty
-    val llvm2 = BasicToLLVM.addPrint(llvm, DPrint("fooo"))
+    val llvm2 = BasicToLLVM.addPrint(llvm, BasicCommand.Print(Seq(Expression(BasicToken.Text("foo")))))
     val file = new File("teste.ll")
     val os = new FileOutputStream(file)
     os.write(llvm2.toString.getBytes)
