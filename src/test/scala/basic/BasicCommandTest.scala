@@ -8,7 +8,7 @@ class BasicCommandTest extends WordSpec {
     val printCommand = Seq(
       BasicToken.Print(),
       BasicToken.Number("10"),
-      BasicToken.Delimiter(","),
+      BasicToken.Delimiter(),
       BasicToken.Number("20")
     )
 
@@ -54,9 +54,9 @@ class BasicCommandTest extends WordSpec {
     val readCommand = Seq(
       BasicToken.Read(),
       BasicToken.Identifier("A1"),
-      BasicToken.Delimiter(","),
+      BasicToken.Delimiter(),
       BasicToken.Identifier("A2"),
-      BasicToken.Delimiter(","),
+      BasicToken.Delimiter(),
       BasicToken.Identifier("A3")
     )
 
@@ -68,9 +68,9 @@ class BasicCommandTest extends WordSpec {
     val dataCommand = Seq(
       BasicToken.Data(),
       BasicToken.Number("10"),
-      BasicToken.Delimiter(","),
+      BasicToken.Delimiter(),
       BasicToken.Number("20"),
-      BasicToken.Delimiter(","),
+      BasicToken.Delimiter(),
       BasicToken.Number("30")
     )
 
