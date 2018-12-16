@@ -84,7 +84,7 @@ class WirthTest extends WordSpec {
         )
       )
 
-      val parsed = WirthExperimentation.parse(x6)
+      val parsed = WirthExperimentation.parseHandle(x6)
       assert(parsed === parsedExpects)
       //      println(next)
 //      println(rest)
