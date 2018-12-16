@@ -31,4 +31,8 @@ object BasicClassifier {
     commandLine.map(classifyToken) :+ BasicToken.LineNumber(lineNumber.rawValue)
   }
 
+  def createStatement(lexicalTokens: Seq[LexicalToken]): BasicStatement = {
+    BasicStatement.fromTokensLine(classifyLine(lexicalTokens))
+  }
+
 }
