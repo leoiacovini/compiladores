@@ -7,7 +7,7 @@ import org.scalatest.WordSpec
 
 class WirthTransducerTest extends WordSpec {
   val transducer = new WirthTransducer
-  "A WirthTransducer" must {
+  "A WirthTransducer's transduce" must {
     "parse rule correctly" in {
       val lexicalTokens = transducer.transduce(
         Seq(
@@ -46,6 +46,24 @@ class WirthTransducerTest extends WordSpec {
         LexicalToken("OtherSymbols", "->"),
         LexicalToken("Terminal", "\"3\""),
         LexicalToken("OtherSymbols", ".")
+      ))
+    }
+  }
+
+  "WirthTransducer's transform" must {
+    "convert to object WirthLexicalToken" in {
+      val wlt = transducer.transform(Seq(
+        LexicalToken("NonTerminal", "A"),
+        LexicalToken("OtherSymbols", "->"),
+        LexicalToken("Terminal", "\"3\""),
+        LexicalToken("OtherSymbols", ".")
+      ))
+
+      assert(wlt == Seq(
+        NonTerminal("A"),
+        Arrow,
+        Terminal("3"),
+        Special(".")
       ))
     }
   }
