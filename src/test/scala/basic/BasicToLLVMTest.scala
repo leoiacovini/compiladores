@@ -6,15 +6,23 @@ import java.io.{File, FileOutputStream, OutputStream, OutputStreamWriter}
 
 class BasicToLLVMTest extends WordSpec {
 
-  "A test" in {
+  "Another test" in {
     val llvm = LLVMProgram.empty
-    val llvm2 = BasicToLLVM.addPrint(llvm, DPrint("fooo"))
+    val context = CodeGenerationContext(llvm, Map.empty)
+    val context2 = BasicToLLVM.addAssign(
+      context,
+      BasicCommand.Assign(BasicToken.Identifier("A"), Expression(BasicToken.Number("34")))
+    )
+    val context3 = BasicToLLVM.addAssign(
+      context2,
+      BasicCommand.Assign(BasicToken.Identifier("B"), Expression(BasicToken.Number("42")))
+    )
     val file = new File("teste.ll")
     val os = new FileOutputStream(file)
-    os.write(llvm2.toString.getBytes)
+    os.write(context3.llvm.toString.getBytes)
     os.close()
     println(file.getAbsolutePath)
-    println(llvm2.toString)
+    println(context3.llvm.toString)
   }
 
 }

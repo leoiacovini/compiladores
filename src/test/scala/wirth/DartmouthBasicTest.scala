@@ -1,6 +1,5 @@
 package wirth
 
-import basic.{BasicToLLVM, DPrint}
 import llvm.{LLVMProgram, OutputWriter}
 import common.automata.ndpa.{NDPARunner, RunHistoryItem}
 import org.scalatest.{FlatSpec, WordSpec}
@@ -131,32 +130,6 @@ class DartmouthBasicTest extends WordSpec {
   val root = NonTerminalToken("PROGRAM")
   "Dartmouth Basic Grammar" must {
     "recognize prints" in {
-      val dartmouthNDPA = WirthToNDPA.fromRules(dartmouthBasicRules, root)
-      val runner = NDPARunner.fromNDPA(dartmouthNDPA)
-
-      val input = Seq(Terminal("1"), Terminal("1"), Terminal("PRINT"), Terminal("\""), Terminal("a"), Terminal("\""), Terminal(";"))
-      val input2 = input ++ input
-      assert(runner.accepts(input))
-      assert(runner.accepts(input2))
-      val run = runner.runAll(input)
-      val run2 = runner.runAll(input2)
-//      println(run.debugString)
-      run2.getAcceptedRunState.foreach { runState =>
-        println(runState.history.map(_.debugString).mkString("\n"))
-      }
-
-      val history = run2.getAcceptedRunState.map(_.history).getOrElse(Seq.empty)
-      val x = run2.getAcceptedRunState.map(_.history).getOrElse(Seq.empty).map(_.inputSymbolOpt)
-      val abc: Map[Int, Seq[RunHistoryItem[WirthToNDPA.WirthGeneratedState, WirthLexicalToken, WirthToNDPA.StackAlphabet]]] = history.zipWithIndex.groupBy {case (_, index) =>
-        history.drop(index).count(h => h.inputSymbolOpt.contains(Terminal(";")))
-      }.mapValues {x => x.map(_._1)}
-
-      val lLVMProgram: LLVMProgram = abc.mapValues(BasicToLLVM.getCommand).toSeq.sortBy(_._1).map(_._2).foldLeft(LLVMProgram.empty) {case (llvm, print: DPrint) =>
-        BasicToLLVM.addPrint(llvm, print)
-      }
-
-      println(lLVMProgram.toString)
-      OutputWriter.write(lLVMProgram, "teste2.ll")
     }
   }
 }

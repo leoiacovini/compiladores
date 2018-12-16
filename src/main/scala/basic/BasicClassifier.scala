@@ -9,7 +9,7 @@ object BasicClassifier {
     lexicalToken.typ.toUpperCase match {
       case "NUMBER" => BasicToken.Number(lexicalToken.rawValue)
       case "INTEGER" => BasicToken.Number(lexicalToken.rawValue)
-      case "TEXT" => BasicToken.Text(lexicalToken.rawValue)
+      case "STRING" => BasicToken.Text(lexicalToken.rawValue.drop(1).dropRight(1))
       case "VARIABLENAME" => BasicToken.Identifier(lexicalToken.rawValue)
       case _ => lexicalToken.rawValue.toUpperCase() match {
         case "LET" => BasicToken.Let()
