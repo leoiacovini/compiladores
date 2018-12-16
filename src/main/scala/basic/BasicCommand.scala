@@ -25,7 +25,9 @@ object BasicCommand {
   }
 
   def tokensLineToPrint(commandLine: Seq[BasicToken]): BasicCommand.Print = commandLine match {
-    case Seq(_print, tail @ _*) => Print(tail)
+    case Seq(_print, tail @ _*) =>
+      val items = tail.partition(b => b.isInstanceOf[BasicToken.Delimiter])
+      Print(items._2)
   }
 
   def tokensLineToData(commandLine: Seq[BasicToken]): BasicCommand.Data = commandLine match {
