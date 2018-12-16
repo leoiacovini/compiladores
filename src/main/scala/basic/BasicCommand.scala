@@ -9,7 +9,7 @@ object BasicCommand {
   case class If(exp1: Seq[BasicToken], exp2: Seq[BasicToken], comparator: BasicToken.Comparator, thenInt: BasicToken.Number) extends BasicCommand
   case class Read(vars: Seq[BasicToken.Identifier]) extends BasicCommand
   case class Data(values: Seq[BasicToken]) extends BasicCommand
-  case class For(varName: BasicToken.Identifier, to: BasicToken, step: BasicToken) extends BasicCommand
+  case class For(varName: BasicToken.Identifier, initialExp: Seq[BasicToken], toExp: Seq[BasicToken]) extends BasicCommand
   case class Next(varName: BasicToken.Identifier) extends BasicCommand
   case class GoSub(number: BasicToken.Number) extends BasicCommand
   case class Return() extends BasicCommand
@@ -52,6 +52,13 @@ object BasicCommand {
     case Seq(_next, varName: BasicToken.Identifier) => Next(varName)
   }
 
+  def tokensLineToFor(commandLine: Seq[BasicToken]): BasicCommand.For = commandLine match {
+    case Seq(_for, varName: BasicToken.Identifier, _equal: BasicToken.Equal, tail @_*) =>
+      val toIndex = tail.indexOf(BasicToken.To())
+      val (exp1, exp2PlusTo) = tail.splitAt(toIndex)
+      For(varName, exp1, exp2PlusTo.tail)
+  }
+
   def tokensLineToIf(commandLine: Seq[BasicToken]): BasicCommand.If = {
     val withoutIf = commandLine.tail
     val comparator = withoutIf.collectFirst { case comp: BasicToken.Comparator => comp }.get
@@ -77,6 +84,8 @@ object BasicCommand {
       case BasicToken.GoSub(_) => tokensLineToGosub(commandLine)
       case BasicToken.Next(_) => tokensLineToNext(commandLine)
       case BasicToken.If(_) => tokensLineToIf(commandLine)
+      case BasicToken.For(_) => tokensLineToFor(commandLine)
+      case BasicToken.Rem(_) => BasicCommand.Remark(BasicToken.Text(""))
     }
   }
 }
