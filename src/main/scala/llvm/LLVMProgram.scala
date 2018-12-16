@@ -34,6 +34,23 @@ case class LLVMStore(value: TypedValue, where: TypedValue) extends LLVMStatement
   override def getStatement: String =
     s"""store ${value.getString}, ${where.getString}"""
 }
+
+case class LLVMLoad(result: TypedValue, from: TypedValue) extends LLVMStatement {
+  override def getStatement: String =
+    s"""%${result.name} = load ${result.typ}, ${from.getString}"""
+}
+case class LLVMAlloca(result: TypedValue) extends LLVMStatement {
+  override def getStatement: String =
+    s"""%${result.name} = alloca ${result.typ}"""
+}
+
+case class LLVMAssign(result: TypedValue, value: String) extends LLVMStatement {
+  override def getStatement: String =
+    s"""%${result.name} = add ${result.typ} 0, $value"""
+}
+case class LLVMAddLocalVariables(result: String, left: String, right: String) extends  LLVMStatement {
+  override def getStatement: String = s"%$result = add i32 %$left, %$right"
+}
 object LLVMProgram {
   def getGlobalStringPtr(llvmGlobalString: LLVMGlobalString): LLVMGetElementPtr = {
     LLVMGetElementPtr(
@@ -43,18 +60,45 @@ object LLVMProgram {
       Seq(TypedValue("i64", "0"), TypedValue("i64", "0"))
     )
   }
+  def addLocalVariables(left: String, right: String, tempCount: Int): LLVMAddLocalVariables = {
+    LLVMAddLocalVariables(s"temp.$tempCount", left, right)
+  }
 
   def storeVariable(index: Int, value: Int, tempCount: Int): Seq[LLVMStatement] = {
     Seq(
       LLVMGetElementPtr2(
-        "variable_ptr." + tempCount,
+        s"temp.$tempCount",
         "i32",
         TypedValue("i32*", "%variables"),
         TypedValue("i32", index.toString)
       ),
       LLVMStore(
         TypedValue("i32", value.toString),
-        TypedValue("i32*", "%variable_ptr." + tempCount)
+        TypedValue("i32*", s"%temp.$tempCount")
+      )
+    )
+  }
+
+  def storeConstant(value: Int, tempCount: Int): Seq[LLVMStatement] = {
+    Seq(
+      LLVMAssign(
+        TypedValue("i32", s"temp.$tempCount"),
+        value.toString
+      )
+    )
+  }
+
+  def loadVariable(variableIndex: Int, tempCount: Int): Seq[LLVMStatement] = {
+    Seq(
+      LLVMGetElementPtr2(
+        s"temp.${tempCount}_ptr" ,
+        "i32",
+        TypedValue("i32*", "%variables"),
+        TypedValue("i32", variableIndex.toString)
+      ),
+      LLVMLoad(
+        TypedValue("i32", "temp." + tempCount),
+        TypedValue("i32*", s"%temp.${tempCount}_ptr")
       )
     )
   }
@@ -89,7 +133,11 @@ case class LLVMProgram(constants: Seq[LLVMGlobalConstant[_]], statements: Seq[LL
        |
        |    store i32 0, i32* %cell_index_ptr
        |    store i32 0, i32* %variable_index_ptr
+       |
+       |
        |    ${statements.map(_.getStatement).mkString("\n    ")}
+       |
+       |
        |    call void @free(i8* %cells)
        |
        |    %variable_ptr2 = getelementptr i32, i32* %variables, i32 1

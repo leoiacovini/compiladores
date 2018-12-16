@@ -26,4 +26,28 @@ class ExpressionTest extends WordSpec {
 
   }
 
+  "Creating AST 2" in {
+
+    val expression = Expression(
+      BasicToken.OpenParenthesis(),
+      BasicToken.Number("10"),
+      BasicToken.Plus(),
+      BasicToken.Number("20"),
+      BasicToken.Plus(),
+      BasicToken.Identifier("A"),
+      BasicToken.CloseParenthesis(),
+      BasicToken.Plus(),
+      BasicToken.Number("5"))
+
+    assert(expression.toAST ==
+      OpNode(BasicToken.Plus(),
+        OpNode(BasicToken.Plus(),
+          LeafNode(BasicToken.Number("10")),
+          OpNode(BasicToken.Plus(),
+            LeafNode(BasicToken.Number("20")),
+            LeafNode(BasicToken.Identifier("A")))),
+        LeafNode(BasicToken.Number("5"))))
+
+  }
+
 }

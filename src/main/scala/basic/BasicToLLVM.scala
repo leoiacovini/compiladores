@@ -1,7 +1,9 @@
 package basic
 
 import basic.BasicToLLVM.{SymbolTable, VariableInformation}
-import llvm.{LLVMGlobalString, LLVMProgram, LLVMStatement}
+import basic.BasicToken._
+import basic.Expression.{LeafNode, OpNode}
+import llvm.{LLVMAddLocalVariables, LLVMGlobalString, LLVMProgram, LLVMStatement}
 
 import scala.util.Try
 
@@ -52,5 +54,51 @@ object BasicToLLVM {
           .incrementTempCount
       case _ => ???
     }
+  }
+
+  def calcNode(context: CodeGenerationContext, node: Expression.Node): CodeGenerationContext = {
+    node match {
+      case LeafNode(value) =>
+        value match {
+          case id: Identifier =>
+            val variableIndex = context.getVariableIndex(id)
+            val load = LLVMProgram.loadVariable(variableIndex, context.tempCount)
+            println(s"temp${context.tempCount} = ${id.literal}")
+            context.addStatements(load).incrementTempCount
+          case Text(literal) => throw new Exception(s"Could not calculate expression for text literal '$literal'")
+          case Number(literal) if Try(literal.toInt).isSuccess =>
+            println(s"temp${context.tempCount} = $literal")
+            context.addStatements(LLVMProgram.storeConstant(literal.toInt, context.tempCount)).incrementTempCount
+          case _ => throw new Exception(s"Could not generate expression for token")
+        }
+      case OpNode(operation, left, right) =>
+        operation match {
+          case Plus(_) =>
+            val contextAfterLeft = calcNode(context, left)
+            val contextAfterRight = calcNode(contextAfterLeft, right)
+            val leftIndex = contextAfterLeft.tempCount - 1
+            val rightIndex = contextAfterRight.tempCount - 1
+            println(s"temp${contextAfterRight.tempCount} = temp$leftIndex + temp$rightIndex")
+
+            contextAfterRight.addStatements(
+              Seq(
+                LLVMProgram.addLocalVariables(
+                  s"temp.$leftIndex",
+                  s"temp.$rightIndex",
+                  contextAfterRight.tempCount
+                )
+              )
+            ).incrementTempCount
+          case Minus(_) => ???
+          case Multiply(_) => ???
+          case Divide(_) => ???
+          case _ => ???
+        }
+      case _ => ???
+    }
+  }
+  def calcExpression(context: CodeGenerationContext, expression: Expression): CodeGenerationContext = {
+    val t: Expression.Node = expression.toAST
+    calcNode(context, t)
   }
 }
