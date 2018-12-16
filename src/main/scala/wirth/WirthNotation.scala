@@ -6,7 +6,7 @@ import jdk.nashorn.internal.parser.TokenStream
 import wirth.WirthNotation._
 import wirth.WirthToNDPA.{ExpressionContext, fromExpressionWithoutRecursion}
 import java.util.UUID.randomUUID
-
+import wirth.WirthLexer.GeneratedRunner
 import scala.annotation.tailrec
 
 trait WirthLexicalToken
@@ -265,8 +265,37 @@ object WirthToNDPA {
   sealed trait WirthGeneratedState
   case class TrapState(id: String, exp: Expression) extends WirthGeneratedState
   case class RuleInitialState(nonTerminalToken: NonTerminalToken) extends WirthGeneratedState
+  case class RuleAcceptState(nonTerminalToken: NonTerminalToken) extends WirthGeneratedState
   case class PartialSequence(id: String, seq: Sequence, done: Int) extends WirthGeneratedState
   case class AcceptSequence(id: String, seq: Sequence) extends WirthGeneratedState
+  case class WaitingTerminal(id: String, terminalToken: TerminalToken) extends WirthGeneratedState
+  case class AcceptTerminal(id: String, terminalToken: TerminalToken) extends WirthGeneratedState
+  def fromTerminal(tt: TerminalToken): NonDeterministicPushdownAutomata[WirthLexicalToken, StackAlphabet, WirthGeneratedState] = {
+    fromTerminal(tt, randomUUID().toString)
+  }
+
+  def fromTerminal(tt: TerminalToken, uuid: String): NonDeterministicPushdownAutomata[WirthLexicalToken, StackAlphabet, WirthGeneratedState] = {
+    new NonDeterministicPushdownAutomata[WirthLexicalToken, StackAlphabet, WirthGeneratedState] {
+      override val id: String = uuid
+      override val inputAlphabet: Seq[WirthLexicalToken] = Seq(tt.terminal)
+      override val stackAlphabet: Seq[StackAlphabet] = Seq(InitialStackSymbol)
+      override val initialStackSymbol: StackAlphabet = InitialStackSymbol
+      override val initialState: WirthGeneratedState = WaitingTerminal(id, tt)
+      override val states: Seq[WirthGeneratedState] = Seq(WaitingTerminal(id, tt), AcceptTerminal(id, tt), TrapState(id, tt))
+      override val acceptStates: Seq[WirthGeneratedState] = Seq(AcceptTerminal(id, tt))
+      override val trapState: WirthGeneratedState = TrapState(id, tt)
+
+      override def transition[S >: WirthGeneratedState](state: S, inputSymbolOpt: Option[WirthLexicalToken], stackSymbolOpt: Option[StackAlphabet]): Seq[(S, Seq[StackAlphabet])] = {
+        val notChanged = stackSymbolOpt.map(s => Seq(s)).getOrElse(Seq.empty)
+        val x = (state, inputSymbolOpt, stackSymbolOpt) match {
+          case (WaitingTerminal(i, _), Some(tt.terminal), Some(InitialStackSymbol)) if i == id => (AcceptTerminal(id, tt), Seq.empty) :: Nil
+          case _ => Seq.empty
+        }
+        x
+      }
+    }
+  }
+
   def fromSequenceOfTerminals(seq: Sequence): NonDeterministicPushdownAutomata[WirthLexicalToken, StackAlphabet, WirthGeneratedState] = {
     fromSequenceOfTerminals(seq, randomUUID().toString)
   }
@@ -330,7 +359,7 @@ object WirthToNDPA {
   def fromNonRecursiveExpression(exp: Expression, context: ExpressionContext): NonDeterministicPushdownAutomata[WirthLexicalToken, StackAlphabet, WirthGeneratedState] = {
     exp match {
       case ntt: NonTerminalToken => fromNonRecursiveExpression(context.rules(ntt), context.call(ntt))
-      case tt: TerminalToken => fromSequenceOfTerminals(Sequence(tt))
+      case tt: TerminalToken => fromTerminal(tt)
       case seq: Sequence if seq.expressions.forall(e =>  e.isInstanceOf[TerminalToken]) => fromSequenceOfTerminals(seq)
       case seq: Sequence =>
         seq.expressions.map(exp => fromNonRecursiveExpression(exp, context)).reduceLeft(NonDeterministicPushdownAutomata.concat)
@@ -354,7 +383,7 @@ object WirthToNDPA {
       case seq: Sequence if seq.expressions.forall(e => isRecursionSafe(e, context)) =>
         fromNonRecursiveExpression(seq, context)
       case terminalToken: TerminalToken =>
-        fromSequenceOfTerminals(Sequence(terminalToken))
+        fromTerminal(terminalToken)
       case or: Or =>
         val ndpas: Seq[NonDeterministicPushdownAutomata[WirthLexicalToken, StackAlphabet, WirthGeneratedState]] = or.expressions.filterNot(e => WirthExperimentation.nonTerminalsOfExpression(e).exists(exp => context.isRecursive(exp))).map(o => fromExpression(o, context))
         ndpas.drop(1).foldLeft(ndpas.head) {case (ndpa1, ndpa2) => NonDeterministicPushdownAutomata.or(ndpa1, ndpa2)}
@@ -424,7 +453,7 @@ object WirthToNDPA {
         fromSequenceOfTerminals(seq)
       case seq: Sequence if  seq.expressions.forall(e => isRecursionSafe(e, context)) => fromNonRecursiveExpression(seq, context)
       case terminalToken: TerminalToken =>
-        fromSequenceOfTerminals(Sequence(terminalToken))
+        fromTerminal(terminalToken)
       case seq: Sequence if seq.expressions.exists(e => e.isInstanceOf[NonTerminalToken]) =>
         val left = seq.expressions.takeWhile(e => e.isInstanceOf[TerminalToken])
         val (Seq(ntt: NonTerminalToken), right) = seq.expressions.drop(left.size).splitAt(1)
@@ -469,8 +498,11 @@ object WirthToNDPA {
         }
       case or: Or =>
         val ndpas: Seq[NonDeterministicPushdownAutomata[WirthLexicalToken, StackAlphabet, WirthGeneratedState]] = or.expressions.map(o => fromExpression(o, context))
-        ndpas.drop(1).foldLeft(ndpas.head) {case (ndpa1, ndpa2) => NonDeterministicPushdownAutomata.or(ndpa1, ndpa2)}
+        ndpas.reduceLeft[NonDeterministicPushdownAutomata[WirthLexicalToken, StackAlphabet, WirthGeneratedState]]
+          {case (ndpa1, ndpa2) =>
+            NonDeterministicPushdownAutomata.or(ndpa1, ndpa2)}
       case a =>
+        println("PANIC")
         println(a)
         ???
     }
@@ -478,11 +510,14 @@ object WirthToNDPA {
     context.getRule(exp) match {
       case Some(ntt) =>
         val ruleInitialState = RuleInitialState(ntt)
+        val ruleAcceptState = RuleAcceptState(ntt)
         ndpa
           .addState(ruleInitialState)
+          .addState(ruleAcceptState)
           .replaceInitialState(ruleInitialState)
+          .replaceAcceptStates(Seq(ruleAcceptState))
           .addTransition(ruleInitialState, None, None, Seq((ndpa.initialState, Seq(InitialStackSymbol))))
-          .addTransition(ndpa.acceptStates, None, Some(InitialStackSymbol), Seq((ndpa.acceptStates.head, Seq.empty)))
+          .addTransition(ndpa.acceptStates, None, Some(InitialStackSymbol), Seq((ruleAcceptState, Seq.empty)))
       case None =>
         ndpa
     }

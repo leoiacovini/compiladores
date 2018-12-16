@@ -47,17 +47,21 @@ case class NDPARunner[InputSymbol, StackSymbol, State](ndpa: NonDeterministicPus
   }
 
   def debugString: String = {
-    current.map {runState =>
-      s"""
-        |NDPARunState: {
-        |  state: ${runState.state}
-        |  stack:
-        |    ${runState.stack.mkString("\n    ")}
-        |  history:
-        |    ${runState.history.map(_.debugString).mkString("\n    ")}
-        |}
-      """.stripMargin
-    }.mkString("")
+    if (this.current.isEmpty) {
+      "Empty current state"
+    } else {
+      current.map { runState =>
+        s"""
+           |NDPARunState: {
+           |  state: ${runState.state}
+           |  stack:
+           |    ${runState.stack.mkString("\n    ")}
+           |  history:
+           |    ${runState.history.map(_.debugString).mkString("\n    ")}
+           |}
+           |""".stripMargin
+      }.mkString("")
+    }
   }
 }
 
@@ -70,16 +74,16 @@ object NDPARunner {
   def runEmptyTransitions[InputSymbol, StackSymbol, State](ndpa: NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, State],
                                                            runStates: Seq[NDPARunState[State, InputSymbol, StackSymbol]]): Seq[NDPARunState[State, InputSymbol, StackSymbol]] = {
 
-    println(s"runStates: ${runStates.size}")
+//    println(s"runStates: ${runStates.size}")
     runStates.flatMap { runState =>
       val emptyTransitionRunStates = ndpa.transition(runState.state, None, None).map(tr => runState.applyTransitionResult(None, None, tr))
       val stackTransitionRunStates = ndpa.transition(runState.state, None, runState.stack.headOption).map(tr => runState.popStack().applyTransitionResult(None, runState.stack.headOption, tr))
-      println {
-        s"""
-          |empty: ${emptyTransitionRunStates.size}
-          |stack: ${stackTransitionRunStates.size}
-        """.stripMargin
-      }
+//      println {
+//        s"""
+//          |empty: ${emptyTransitionRunStates.size}
+//          |stack: ${stackTransitionRunStates.size}
+//        """.stripMargin
+//      }
 //      if(runState.state.equals(AcceptSequence(Sequence(TerminalToken("a"))))) {
 //        println(emptyTransitionRunStates)
 //      }
