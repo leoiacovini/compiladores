@@ -14,6 +14,7 @@ case class Terminal(str: String) extends WirthLexicalToken
 case class NonTerminal(str: String) extends WirthLexicalToken
 case class Special(str: String) extends WirthLexicalToken
 case object EmptySequence extends WirthLexicalToken
+case object Arrow extends WirthLexicalToken
 
 object WirthNotation {
   sealed trait WirthState
@@ -156,12 +157,29 @@ object WirthExperimentation {
     case sequence if sequence.size > 1 => Sequence(sequence: _*)
     case notSequence => notSequence.head
   }
-  def parse(tokenStream: TokenStream): Expression = {
+
+  def parseGrammar(tokenStream: TokenStream): Map[NonTerminalToken, Expression] = {
+    tokenStream.indexOf(Special(".")) match {
+      case -1 => Map.empty
+      case i =>
+        val (rule, restGrammar) = tokenStream.splitAt(i)
+        parseGrammar(restGrammar.drop(1)) + parseRule(rule)
+    }
+  }
+
+  def parseRule(tokenStream: TokenStream): (NonTerminalToken, Expression) = {
+    tokenStream match {
+      case Seq(NonTerminal(rawNT), Arrow, handle @ _*) =>
+        NonTerminalToken(rawNT) -> parseHandle(handle)
+    }
+  }
+
+  def parseHandle(tokenStream: TokenStream): Expression = {
     val expressions: ExpressionTokenStream = getExpressions(tokenStream)
     splitByOr(expressions) match {
       case or if or.size > 1 =>
         val orExpressions = or.map { orStatement =>
-          resolveSeq(orStatement.map(parse))
+          resolveSeq(orStatement.map(parseHandle))
         }
         Or(orExpressions: _*)
       case noOr =>
@@ -170,9 +188,9 @@ object WirthExperimentation {
           expressions.map {
             case Seq(nt: NonTerminal) => NonTerminalToken(nt)
             case Seq(t: Terminal) => TerminalToken(t)
-            case parentesis: Seq[WirthLexicalToken] if parentesis.headOption.contains(Special("(")) && parentesis.lastOption.contains(Special(")")) => ExpressionParentesis(parse(parentesis.drop(1).dropRight(1)))
-            case brackets: Seq[WirthLexicalToken] if brackets.headOption.contains(Special("[")) && brackets.lastOption.contains(Special("]")) => ExpressionBrackets(parse(brackets.drop(1).dropRight(1)))
-            case kleenes: Seq[WirthLexicalToken] if kleenes.headOption.contains(Special("{")) && kleenes.lastOption.contains(Special("}")) => ExpressionKleene(parse(kleenes.drop(1).dropRight(1)))
+            case parentesis: Seq[WirthLexicalToken] if parentesis.headOption.contains(Special("(")) && parentesis.lastOption.contains(Special(")")) => ExpressionParentesis(parseHandle(parentesis.drop(1).dropRight(1)))
+            case brackets: Seq[WirthLexicalToken] if brackets.headOption.contains(Special("[")) && brackets.lastOption.contains(Special("]")) => ExpressionBrackets(parseHandle(brackets.drop(1).dropRight(1)))
+            case kleenes: Seq[WirthLexicalToken] if kleenes.headOption.contains(Special("{")) && kleenes.lastOption.contains(Special("}")) => ExpressionKleene(parseHandle(kleenes.drop(1).dropRight(1)))
           }
         }
     }

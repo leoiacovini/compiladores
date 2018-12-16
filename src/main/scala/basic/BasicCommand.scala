@@ -4,16 +4,16 @@ trait BasicCommand
 object BasicCommand {
 
   case class Assign(varName: BasicToken.Identifier, exp: Seq[BasicToken])
-  case class Print(items: Seq[BasicToken])
-  case class Goto(lineNumber: BasicToken.Number)
-  case class If(exp1: Seq[BasicToken], exp2: Seq[BasicToken], compareOperator: BasicToken.Operator, thenInt: BasicToken.Number)
-  case class Read(vars: Seq[BasicToken.Identifier])
-  case class Data(values: Seq[BasicToken])
-  case class For(varName: BasicToken.Identifier, to: BasicToken, step: BasicToken)
-  case class Next(varName: BasicToken.Identifier)
-  case class GoSub(number: BasicToken.Number)
-  case class Return()
-  case class Remark(comment: BasicToken.Text)
+  case class Print(items: Seq[BasicToken]) extends BasicCommand
+  case class Goto(lineNumber: BasicToken.Number) extends BasicCommand
+  case class If(exp1: Seq[BasicToken], exp2: Seq[BasicToken], compareOperator: BasicToken.Operator, thenInt: BasicToken.Number) extends BasicCommand
+  case class Read(vars: Seq[BasicToken.Identifier]) extends BasicCommand
+  case class Data(values: Seq[BasicToken]) extends BasicCommand
+  case class For(varName: BasicToken.Identifier, to: BasicToken, step: BasicToken) extends BasicCommand
+  case class Next(varName: BasicToken.Identifier) extends BasicCommand
+  case class GoSub(number: BasicToken.Number) extends BasicCommand
+  case class Return() extends BasicCommand
+  case class Remark(comment: BasicToken.Text) extends BasicCommand
 
 
   def tokensLineToAssign(commandLine: Seq[BasicToken]): BasicCommand.Assign = commandLine match {

@@ -58,4 +58,21 @@ class WirthTransducer extends Transducer {
       case (_, None) => throw new Exception(s"Could not find any token in $chars")
     }
   }
+
+  def transform(lex: Seq[LexicalToken]): Seq[WirthLexicalToken] = {
+    lex.map {
+      case LexicalToken("Terminal", rawValue) => Terminal(rawValue.drop(1).dropRight(1))
+      case LexicalToken("NonTerminal", rawValue) => NonTerminal(rawValue)
+      case LexicalToken("OtherSymbols", "{") => Special("{")
+      case LexicalToken("OtherSymbols", "[") => Special("[")
+      case LexicalToken("OtherSymbols", "(") => Special("(")
+      case LexicalToken("OtherSymbols", ")") => Special(")")
+      case LexicalToken("OtherSymbols", "]") => Special("]")
+      case LexicalToken("OtherSymbols", "}") => Special("}")
+      case LexicalToken("OtherSymbols", "|") => Special("|")
+
+      case LexicalToken("OtherSymbols", ".") => Special(".")
+      case LexicalToken("OtherSymbols", "->") => Arrow
+    }
+  }
 }
