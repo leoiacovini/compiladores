@@ -447,11 +447,12 @@ object WirthToNDPA {
     })
   }
   def fromExpression(exp: Expression, context: ExpressionContext): NonDeterministicPushdownAutomata[WirthLexicalToken, StackAlphabet, WirthGeneratedState] = {
-    println(s"fromExpression: ${WirthExperimentation.expToString(exp)}")
+//    println(s"fromExpression: ${WirthExperimentation.expToString(exp)}")
     val ndpa = exp match {
       case seq: Sequence if seq.expressions.forall(e =>  e.isInstanceOf[TerminalToken]) =>
         fromSequenceOfTerminals(seq)
       case seq: Sequence if  seq.expressions.forall(e => isRecursionSafe(e, context)) => fromNonRecursiveExpression(seq, context)
+      case ntt: NonTerminalToken if isRecursionSafe(ntt, context) => fromNonRecursiveExpression(ntt, context)
       case terminalToken: TerminalToken =>
         fromTerminal(terminalToken)
       case seq: Sequence if seq.expressions.exists(e => e.isInstanceOf[NonTerminalToken]) =>
@@ -477,7 +478,7 @@ object WirthToNDPA {
             )//.addTransition(suffix.acceptStates, None, Some(InitialStackSymbol), Seq((suffix.acceptStates.head, Seq.empty)))
           case (l, r) if context.isRecursive(ntt) =>
             println("Auto recursion")
-            println(ntt, l, r)
+//            println(ntt, l, r)
             val leftExp = Sequence(l: _*)
             val rightExp = Sequence(r: _*)
             val centerAutomata = fromExpressionWithoutRecursion(context.rules(ntt), context)
@@ -506,7 +507,6 @@ object WirthToNDPA {
         println(a)
         ???
     }
-    println("wat")
     context.getRule(exp) match {
       case Some(ntt) =>
         val ruleInitialState = RuleInitialState(ntt)
