@@ -5,7 +5,14 @@ import org.scalatest.WordSpec
 import java.io.{File, FileOutputStream, OutputStream, OutputStreamWriter}
 
 class BasicToLLVMTest extends WordSpec {
-
+  def writeTestFile(context: CodeGenerationContext): Unit = {
+    val file = new File("teste.ll")
+    val os = new FileOutputStream(file)
+    os.write(context.llvm.toString.getBytes)
+    os.close()
+    println(file.getAbsolutePath)
+    println(context.llvm.toString)
+  }
   "Another test" in {
     val llvm = LLVMProgram.empty
     val context = CodeGenerationContext(llvm, Map.empty)
@@ -17,12 +24,22 @@ class BasicToLLVMTest extends WordSpec {
       context2,
       BasicCommand.Assign(BasicToken.Identifier("B"), Expression(BasicToken.Number("42")))
     )
-    val file = new File("teste.ll")
-    val os = new FileOutputStream(file)
-    os.write(context3.llvm.toString.getBytes)
-    os.close()
-    println(file.getAbsolutePath)
-    println(context3.llvm.toString)
+    val expression = Expression(
+      BasicToken.OpenParenthesis(),
+      BasicToken.Number("10"),
+      BasicToken.Plus(),
+      BasicToken.Number("20"),
+      BasicToken.Plus(),
+      BasicToken.Identifier("A"),
+      BasicToken.CloseParenthesis(),
+      BasicToken.Multiply(),
+      BasicToken.Number("5"))
+    val context4 = BasicToLLVM.calcExpression(context3, expression)
+    println(context4.symbolTable)
+    context4.llvm.statements.foreach(println)
+    writeTestFile(context4.addStatements(LLVMProgram.printTemp(8)))
   }
+
+
 
 }
