@@ -182,4 +182,27 @@ object BasicToLLVM {
     }
     rightContext.addStatements(stat).incrementTempCount
   }
+
+  def toLLVM(statements: Seq[BasicStatement]) : LLVMProgram = {
+    val emptyContext = CodeGenerationContext(LLVMProgram.empty, Map.empty, linesThatNeedLabel = getLinesThatNeedLabel(statements))
+    statements.foldLeft(emptyContext) {case (context, statement) =>
+      val ctx = if (context.linesThatNeedLabel.contains(statement.lineNumber))
+        addLineNumber(context, BasicToken.LineNumber(statement.lineNumber.toString))
+      else context
+      statement.command match {
+        case assign: Assign => addAssign(ctx, assign)
+        case print: BasicCommand.Print => addPrint(ctx, print)
+        case goto: BasicCommand.Goto => ???
+        case ifBasic: BasicCommand.If => addIf(ctx, ifBasic)
+        case read: BasicCommand.Read => ???
+        case data: BasicCommand.Data => ???
+        case forBasic: BasicCommand.For => ???
+        case next: BasicCommand.Next => ???
+        case gosub: BasicCommand.GoSub => ???
+        case returnBasic: BasicCommand.Return => ???
+        case remark: Remark => ???
+        case _ => ???
+      }
+    }.llvm
+  }
 }
