@@ -89,9 +89,54 @@ object BasicToLLVM {
                 )
               )
             ).incrementTempCount
-          case Minus(_) => ???
-          case Multiply(_) => ???
-          case Divide(_) => ???
+          case Minus(_) =>
+            val contextAfterLeft = calcNode(context, left)
+            val contextAfterRight = calcNode(contextAfterLeft, right)
+            val leftIndex = contextAfterLeft.tempCount - 1
+            val rightIndex = contextAfterRight.tempCount - 1
+            println(s"temp${contextAfterRight.tempCount} = temp$leftIndex - temp$rightIndex")
+
+            contextAfterRight.addStatements(
+              Seq(
+                LLVMProgram.subtractLocalVariables(
+                  s"temp.$leftIndex",
+                  s"temp.$rightIndex",
+                  contextAfterRight.tempCount
+                )
+              )
+            ).incrementTempCount
+          case Multiply(_) =>
+            val contextAfterLeft = calcNode(context, left)
+            val contextAfterRight = calcNode(contextAfterLeft, right)
+            val leftIndex = contextAfterLeft.tempCount - 1
+            val rightIndex = contextAfterRight.tempCount - 1
+            println(s"temp${contextAfterRight.tempCount} = temp$leftIndex * temp$rightIndex")
+
+            contextAfterRight.addStatements(
+              Seq(
+                LLVMProgram.multiplyLocalVariables(
+                  s"temp.$leftIndex",
+                  s"temp.$rightIndex",
+                  contextAfterRight.tempCount
+                )
+              )
+            ).incrementTempCount
+          case Divide(_) =>
+            val contextAfterLeft = calcNode(context, left)
+            val contextAfterRight = calcNode(contextAfterLeft, right)
+            val leftIndex = contextAfterLeft.tempCount - 1
+            val rightIndex = contextAfterRight.tempCount - 1
+            println(s"temp${contextAfterRight.tempCount} = temp$leftIndex / temp$rightIndex")
+
+            contextAfterRight.addStatements(
+              Seq(
+                LLVMProgram.divideLocalVariables(
+                  s"temp.$leftIndex",
+                  s"temp.$rightIndex",
+                  contextAfterRight.tempCount
+                )
+              )
+            ).incrementTempCount
           case _ => ???
         }
       case _ => ???

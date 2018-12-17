@@ -32,12 +32,12 @@ class BasicToLLVMTest extends WordSpec {
       BasicToken.Plus(),
       BasicToken.Identifier("A"),
       BasicToken.CloseParenthesis(),
-      BasicToken.Plus(),
+      BasicToken.Multiply(),
       BasicToken.Number("5"))
     val context4 = BasicToLLVM.calcExpression(context3, expression)
     println(context4.symbolTable)
     context4.llvm.statements.foreach(println)
-    writeTestFile(context4)
+    writeTestFile(context4.addStatements(LLVMProgram.printTemp(8)))
   }
 
 

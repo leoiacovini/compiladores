@@ -1,5 +1,7 @@
 package llvm
 
+import scala.util.Try
+
 trait LLVMGlobalConstant[T] {
   def getDeclaration: String
 }
@@ -26,10 +28,16 @@ case class LLVMGetElementPtr2(result: String, typ: String, from: TypedValue, ind
   override def getStatement: String = s"%$result = getelementptr $typ, ${from.getString}, ${index.getString}"
 }
 
+case class LLVMPrintDouble(localVariable: String) extends LLVMStatement {
+  override def getStatement: String =
+  s"""tail call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.floatFormatString, i32 0, i32 0), double %$localVariable)"""
+}
+
 case class LLVMCall(function: String, ty: String, args: Seq[TypedValue]) extends LLVMStatement {
   override def getStatement: String =
     s"""call $ty @$function(${args.map(_.getString).mkString(", ")})"""
 }
+
 case class LLVMStore(value: TypedValue, where: TypedValue) extends LLVMStatement {
   override def getStatement: String =
     s"""store ${value.getString}, ${where.getString}"""
@@ -39,18 +47,34 @@ case class LLVMLoad(result: TypedValue, from: TypedValue) extends LLVMStatement 
   override def getStatement: String =
     s"""%${result.name} = load ${result.typ}, ${from.getString}"""
 }
+
 case class LLVMAlloca(result: TypedValue) extends LLVMStatement {
   override def getStatement: String =
     s"""%${result.name} = alloca ${result.typ}"""
 }
 
 case class LLVMAssign(result: TypedValue, value: String) extends LLVMStatement {
+
   override def getStatement: String =
-    s"""%${result.name} = add ${result.typ} 0, $value"""
+    s"""%${result.name} = fadd ${result.typ} 0.0, ${Try(value.toInt).map(i => s"$i.0").getOrElse(value)}"""
 }
-case class LLVMAddLocalVariables(result: String, left: String, right: String) extends  LLVMStatement {
-  override def getStatement: String = s"%$result = add i32 %$left, %$right"
+
+case class LLVMAddLocalVariables(result: String, left: String, right: String) extends LLVMStatement {
+  override def getStatement: String = s"%$result = fadd double %$left, %$right"
 }
+
+case class LLVMSubtractLocalVariables(result: String, left: String, right: String) extends LLVMStatement {
+  override def getStatement: String = s"%$result = fsub double %$left, %$right"
+}
+
+case class LLVMMultiplyLocalVariables(result: String, left: String, right: String) extends LLVMStatement {
+  override def getStatement: String = s"%$result = fmul double %$left, %$right"
+}
+
+case class LLVMDivideLocalVariables(result: String, left: String, right: String) extends LLVMStatement {
+  override def getStatement: String = s"%$result = fdiv double %$left, %$right"
+}
+
 object LLVMProgram {
   def getGlobalStringPtr(llvmGlobalString: LLVMGlobalString): LLVMGetElementPtr = {
     LLVMGetElementPtr(
@@ -60,29 +84,48 @@ object LLVMProgram {
       Seq(TypedValue("i64", "0"), TypedValue("i64", "0"))
     )
   }
+
   def addLocalVariables(left: String, right: String, tempCount: Int): LLVMAddLocalVariables = {
     LLVMAddLocalVariables(s"temp.$tempCount", left, right)
+  }
+
+  def subtractLocalVariables(left: String, right: String, tempCount: Int): LLVMSubtractLocalVariables = {
+    LLVMSubtractLocalVariables(s"temp.$tempCount", left, right)
+  }
+
+  def multiplyLocalVariables(left: String, right: String, tempCount: Int): LLVMMultiplyLocalVariables = {
+    LLVMMultiplyLocalVariables(s"temp.$tempCount", left, right)
+  }
+
+  def divideLocalVariables(left: String, right: String, tempCount: Int): LLVMDivideLocalVariables = {
+    LLVMDivideLocalVariables(s"temp.$tempCount", left, right)
   }
 
   def storeVariable(index: Int, value: Int, tempCount: Int): Seq[LLVMStatement] = {
     Seq(
       LLVMGetElementPtr2(
         s"temp.$tempCount",
-        "i32",
-        TypedValue("i32*", "%variables"),
+        "double",
+        TypedValue("double*", "%variables"),
         TypedValue("i32", index.toString)
       ),
       LLVMStore(
-        TypedValue("i32", value.toString),
-        TypedValue("i32*", s"%temp.$tempCount")
+        TypedValue("double", value.toString + ".0"),
+        TypedValue("double*", s"%temp.$tempCount")
       )
+    )
+  }
+
+  def printTemp(tempCount: Int): Seq[LLVMStatement] = {
+    Seq(
+      LLVMPrintDouble(s"temp.$tempCount")
     )
   }
 
   def storeConstant(value: Int, tempCount: Int): Seq[LLVMStatement] = {
     Seq(
       LLVMAssign(
-        TypedValue("i32", s"temp.$tempCount"),
+        TypedValue("double", s"temp.$tempCount"),
         value.toString
       )
     )
@@ -91,14 +134,14 @@ object LLVMProgram {
   def loadVariable(variableIndex: Int, tempCount: Int): Seq[LLVMStatement] = {
     Seq(
       LLVMGetElementPtr2(
-        s"temp.${tempCount}_ptr" ,
-        "i32",
-        TypedValue("i32*", "%variables"),
+        s"temp.${tempCount}_ptr",
+        "double",
+        TypedValue("double*", "%variables"),
         TypedValue("i32", variableIndex.toString)
       ),
       LLVMLoad(
-        TypedValue("i32", "temp." + tempCount),
-        TypedValue("i32*", s"%temp.${tempCount}_ptr")
+        TypedValue("double", "temp." + tempCount),
+        TypedValue("double*", s"%temp.${tempCount}_ptr")
       )
     )
   }
@@ -113,12 +156,18 @@ object LLVMProgram {
 
 case class LLVMProgram(constants: Seq[LLVMGlobalConstant[_]], statements: Seq[LLVMStatement]) {
   def addStatement(statement: LLVMStatement): LLVMProgram = copy(statements = statements :+ statement)
+
   val putsExternalDeclaration = "declare i32 @puts(i8* nocapture) nounwind"
   val externalDeclarations = Seq(
     "declare i32 @puts(i8* nocapture) nounwind",
     "declare i8* @calloc(i32, i32)",
-    "declare void @free(i8*)"
+    "declare void @free(i8*)",
+    "declare i32 @printf(i8*, ...)",
+    "@.integerFormatString = internal constant [4 x i8] c\"%d\\0A\\00\"",
+    "@.floatFormatString = internal constant [4 x i8] c\"%f\\0A\\00\""
+
   )
+
   override def toString: String = {
     s"""
        |${constants.map(_.getDeclaration).mkString("\n")}
@@ -126,23 +175,12 @@ case class LLVMProgram(constants: Seq[LLVMGlobalConstant[_]], statements: Seq[LL
        |${externalDeclarations.mkString("\n")}
        |
        |define i32 @main() {
-       |    %variables = alloca i32, i32 100
-       |    %cells = call i8* @calloc(i32 30000, i32 1)
-       |    %cell_index_ptr = alloca i32
-       |    %variable_index_ptr = alloca i32
-       |
-       |    store i32 0, i32* %cell_index_ptr
-       |    store i32 0, i32* %variable_index_ptr
-       |
+       |    %variables = alloca double, i32 100
        |
        |    ${statements.map(_.getStatement).mkString("\n    ")}
        |
        |
-       |    call void @free(i8* %cells)
-       |
-       |    %variable_ptr2 = getelementptr i32, i32* %variables, i32 1
-       |    %variable2 = load i32, i32* %variable_ptr2
-       |    ret i32 %variable2
+       |    ret i32 0
        |}
     """.stripMargin
   }
