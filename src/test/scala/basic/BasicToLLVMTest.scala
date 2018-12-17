@@ -5,47 +5,29 @@ import org.scalatest.WordSpec
 import java.io.{File, FileOutputStream, OutputStream, OutputStreamWriter}
 
 class BasicToLLVMTest extends WordSpec {
-  def writeTestFile(context: CodeGenerationContext): Unit = {
+  def writeTestFile(llvm: LLVMProgram): Unit = {
     val file = new File("teste.ll")
     val os = new FileOutputStream(file)
-    os.write(context.llvm.toString.getBytes)
+    os.write(llvm.toString.getBytes)
     os.close()
     println(file.getAbsolutePath)
-    println(context.llvm.toString)
+    println(llvm.toString)
   }
   "Another test" in {
-    val llvm = LLVMProgram.empty
-    val context = CodeGenerationContext(llvm, Map.empty)
-    val context2 = BasicToLLVM.addAssign(
-      context,
-      BasicCommand.Assign(BasicToken.Identifier("A"), Expression(BasicToken.Number("34")))
+    val assignA = BasicCommand.Assign(BasicToken.Identifier("A"), Expression(BasicToken.Number("43")))
+    val assignB = BasicCommand.Assign(BasicToken.Identifier("B"), Expression(BasicToken.Number("42")))
+    val ifCommand = BasicCommand.If(Expression(BasicToken.Identifier("A")), Expression(BasicToken.Identifier("B")), BasicToken.Equal(), BasicToken.Number("50"))
+    val printElse = BasicCommand.Print(Seq(Expression(BasicToken.Text("ELSE"))))
+    val printTrue = BasicCommand.Print(Seq(Expression(BasicToken.Text("TRUE"))))
+
+    val basicProgram = Seq(
+      BasicStatement(10, assignA),
+      BasicStatement(20, assignB),
+      BasicStatement(30, ifCommand),
+      BasicStatement(40, printElse),
+      BasicStatement(50, printTrue)
     )
-    val context3 = BasicToLLVM.addAssign(
-      context2,
-      BasicCommand.Assign(BasicToken.Identifier("B"), Expression(BasicToken.Number("42")))
-    )
-    val context4 = BasicToLLVM.addLineNumber(context3, BasicToken.LineNumber("10"))
-    val expression = Expression(
-      BasicToken.OpenParenthesis(),
-      BasicToken.Number("10"),
-      BasicToken.Plus(),
-      BasicToken.Number("20"),
-      BasicToken.Plus(),
-      BasicToken.Identifier("A"),
-      BasicToken.CloseParenthesis(),
-      BasicToken.Multiply(),
-      BasicToken.Number("5"))
-    val context5 = BasicToLLVM.calcExpression(context4, expression)
-
-    val context6 = BasicToLLVM.addIf(context5, BasicCommand.If(Expression(BasicToken.Identifier("A")), Expression(BasicToken.Identifier("B")), BasicToken.Equal(), BasicToken.Number("20")))
-
-    val context7 = BasicToLLVM.addPrint(context6, BasicCommand.Print(Seq(Expression(BasicToken.Text("ELSE")))))
-
-    val context8 = BasicToLLVM.addLineNumber(context7, BasicToken.LineNumber("20"))
-
-    val context9 = BasicToLLVM.addPrint(context8, BasicCommand.Print(Seq(Expression(BasicToken.Text("TRUE")))))
-
-    writeTestFile(context9.addStatements(LLVMProgram.printTemp(8)))
+    writeTestFile(BasicToLLVM.toLLVM(basicProgram))
   }
 
 
