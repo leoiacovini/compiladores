@@ -36,9 +36,16 @@ class BasicToLLVMTest extends WordSpec {
       BasicToken.Multiply(),
       BasicToken.Number("5"))
     val context5 = BasicToLLVM.calcExpression(context4, expression)
-    println(context5.symbolTable)
-    context5.llvm.statements.foreach(println)
-    writeTestFile(context5.addStatements(LLVMProgram.printTemp(8)))
+
+    val context6 = BasicToLLVM.addIf(context5, BasicCommand.If(Expression(BasicToken.Identifier("A")), Expression(BasicToken.Identifier("B")), BasicToken.Equal(), BasicToken.Number("20")))
+
+    val context7 = BasicToLLVM.addPrint(context6, BasicCommand.Print(Seq(Expression(BasicToken.Text("ELSE")))))
+
+    val context8 = BasicToLLVM.addLineNumber(context7, BasicToken.LineNumber("20"))
+
+    val context9 = BasicToLLVM.addPrint(context8, BasicCommand.Print(Seq(Expression(BasicToken.Text("TRUE")))))
+
+    writeTestFile(context9.addStatements(LLVMProgram.printTemp(8)))
   }
 
 

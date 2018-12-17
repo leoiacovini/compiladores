@@ -43,6 +43,16 @@ case class LLVMStore(value: TypedValue, where: TypedValue) extends LLVMStatement
     s"""store ${value.getString}, ${where.getString}"""
 }
 
+case class LLVMConditionalBranch(conditional: String, ifTrue: String, ifFalse: String) extends LLVMStatement {
+  override def getStatement: String =
+    s"""br i1 %$conditional, label %$ifTrue, label %$ifFalse"""
+}
+
+case class LLVMUnconditionalBranch(label: String) extends LLVMStatement {
+  override def getStatement: String =
+    s"""br label %$label"""
+}
+
 case class LLVMLoad(result: TypedValue, from: TypedValue) extends LLVMStatement {
   override def getStatement: String =
     s"""%${result.name} = load ${result.typ}, ${from.getString}"""
@@ -58,6 +68,10 @@ case class LLVMLabel(label: String) extends LLVMStatement {
     s"\n$label:"
 }
 
+case class LLVMCompareEqual(result: String, typ: String, left: String, right: String) extends LLVMStatement {
+  override def getStatement: String =
+    s"""%$result = fcmp oeq $typ %$left, %$right"""
+}
 
 case class LLVMAssign(result: TypedValue, value: String) extends LLVMStatement {
 
@@ -139,7 +153,16 @@ object LLVMProgram {
 
   def label(lineNumber: Int): Seq[LLVMStatement] = {
     Seq(
+      LLVMUnconditionalBranch(s"line$lineNumber"),
       LLVMLabel(s"line$lineNumber")
+    )
+  }
+
+  def ifEqualsThenLabel(tempLeft: Int, tempRight: Int, lineNumberThen: Int, tempCount: Int): Seq[LLVMStatement] = {
+    Seq(
+      LLVMCompareEqual(s"temp.$tempCount", "double", s"temp.$tempLeft", s"temp.$tempRight"),
+      LLVMConditionalBranch(s"temp.$tempCount", s"line$lineNumberThen", s"deadelse$tempCount"),
+      LLVMLabel(s"deadelse$tempCount")
     )
   }
 

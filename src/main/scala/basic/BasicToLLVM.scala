@@ -1,5 +1,6 @@
 package basic
 
+import basic.BasicCommand.{Assign, Remark}
 import basic.BasicToLLVM.{SymbolTable, VariableInformation}
 import basic.BasicToken._
 import basic.Expression.{LeafNode, OpNode}
@@ -10,7 +11,8 @@ import scala.util.Try
 case class CodeGenerationContext(llvm: LLVMProgram,
                                  symbolTable: SymbolTable,
                                  currentIndex: Int = 0,
-                                 tempCount: Int = 0) {
+                                 tempCount: Int = 0,
+                                 linesThatNeedLabel: Seq[Int] = Seq.empty) {
   def withLLVM(llvm: LLVMProgram): CodeGenerationContext = copy(llvm = llvm)
   def addStatements(statements: Seq[LLVMStatement]): CodeGenerationContext = withLLVM(statements.foldLeft(llvm) {
     (llvmProgram, statement) => llvmProgram.addStatement(statement)}
@@ -27,6 +29,17 @@ object BasicToLLVM {
 
   case class VariableInformation(index: Int)
   type SymbolTable = Map[BasicToken.Identifier, VariableInformation]
+  private def getLinesThatNeedLabel(seq: Seq[BasicStatement]): Seq[Int] = {
+    seq.map { case BasicStatement(lineNumber, command) =>
+      command match {
+        case BasicCommand.Goto(line) => Some(line)
+        case BasicCommand.If(_, _, _, thenInt) => Some(thenInt)
+        case BasicCommand.GoSub(number) => Some(number)
+        case BasicCommand.Return() => ???
+        case _ => None
+      }
+    }.collect {case Some(l) => l.literal.toInt}
+  }
   private def addPrintText(llvmProgram: LLVMProgram, text: BasicToken.Text, tempCount: Int): LLVMProgram = {
     val localVariable = "str" + tempCount
     val str = LLVMGlobalString(localVariable, text.literal)
@@ -151,5 +164,22 @@ object BasicToLLVM {
     context.addStatements(
       LLVMProgram.label(lineNumber.literal.toInt)
     )
+  }
+
+  def addIf(context: CodeGenerationContext, ifBasic: BasicCommand.If): CodeGenerationContext = {
+    val leftContext = calcExpression(context, ifBasic.exp1)
+    val leftTemp = leftContext.tempCount - 1
+    val rightContext = calcExpression(leftContext, ifBasic.exp2)
+    val rightTemp = rightContext.tempCount - 1
+
+
+    val stat = ifBasic.comparator match {
+      case Equal(literal) => LLVMProgram.ifEqualsThenLabel(leftTemp, rightTemp, ifBasic.thenInt.literal.toInt, rightContext.tempCount)
+      case Different(literal) => ???
+      case Greater(literal) => ???
+      case Lesser(literal) => ???
+      case _ => ???
+    }
+    rightContext.addStatements(stat).incrementTempCount
   }
 }
