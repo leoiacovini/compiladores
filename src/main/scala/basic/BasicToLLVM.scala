@@ -146,4 +146,10 @@ object BasicToLLVM {
     val t: Expression.Node = expression.toAST
     calcNode(context, t)
   }
+
+  def addLineNumber(context: CodeGenerationContext, lineNumber: LineNumber): CodeGenerationContext = {
+    context.addStatements(
+      LLVMProgram.label(lineNumber.literal.toInt)
+    )
+  }
 }

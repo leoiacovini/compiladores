@@ -53,6 +53,12 @@ case class LLVMAlloca(result: TypedValue) extends LLVMStatement {
     s"""%${result.name} = alloca ${result.typ}"""
 }
 
+case class LLVMLabel(label: String) extends LLVMStatement {
+  override def getStatement: String =
+    s"\n$label:"
+}
+
+
 case class LLVMAssign(result: TypedValue, value: String) extends LLVMStatement {
 
   override def getStatement: String =
@@ -128,6 +134,12 @@ object LLVMProgram {
         TypedValue("double", s"temp.$tempCount"),
         value.toString
       )
+    )
+  }
+
+  def label(lineNumber: Int): Seq[LLVMStatement] = {
+    Seq(
+      LLVMLabel(s"line$lineNumber")
     )
   }
 
