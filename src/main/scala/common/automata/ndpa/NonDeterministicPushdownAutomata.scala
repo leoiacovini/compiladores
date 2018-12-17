@@ -84,8 +84,8 @@ object NonDeterministicPushdownAutomata {
 
   def or[InputSymbol, StackSymbol, State](ndpa1: NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, State],
                                           ndpa2: NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, State]): NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, State] = {
-    println(ndpa1.states)
-    println(ndpa2.states)
+//    println(ndpa1.states)
+//    println(ndpa2.states)
 //    require(isDisjoint(ndpa1.states, ndpa2.states), "States must be disjoint")
 
     new NonDeterministicPushdownAutomata[InputSymbol, StackSymbol, State] {

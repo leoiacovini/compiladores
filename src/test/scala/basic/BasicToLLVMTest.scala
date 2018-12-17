@@ -29,7 +29,4 @@ class BasicToLLVMTest extends WordSpec {
     )
     writeTestFile(BasicToLLVM.toLLVM(basicProgram))
   }
-
-
-
 }

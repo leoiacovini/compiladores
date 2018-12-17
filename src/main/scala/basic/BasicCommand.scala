@@ -91,6 +91,7 @@ object BasicCommand {
     val thenSplit = restAfterOperator.splitAt(thenIndex)
     val exp2 = thenSplit._1
     val thenInt = thenSplit._2(1)
+    println(commandLine)
     BasicCommand.If(Expression(exp1:_*), Expression(exp2:_*), comparator, thenInt.asInstanceOf[BasicToken.Number])
   }
 

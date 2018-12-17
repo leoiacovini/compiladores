@@ -13,6 +13,7 @@ object BasicClassifier {
       case "VARIABLENAME" => BasicToken.Identifier(lexicalToken.rawValue)
       case _ => lexicalToken.rawValue.toUpperCase() match {
         case "LET" => BasicToken.Let()
+        case "IF" => BasicToken.If()
         case "RETURN" => BasicToken.Return()
         case "GOSUB" => BasicToken.GoSub()
         case "READ" => BasicToken.Read()
@@ -51,6 +52,10 @@ object BasicClassifier {
 
   def createStatement(lexicalTokens: Seq[LexicalToken]): BasicStatement = {
     BasicStatement.fromTokensLine(classifyLine(lexicalTokens))
+  }
+
+  def tokenize(lexicalTokens: Seq[LexicalToken]): Seq[BasicStatement] = {
+    BasicCommand.splitBySeparator(lexicalTokens, LexicalToken("ENDOFSTATEMENT", ";")).filter(_.nonEmpty).map(createStatement)
   }
 
 }

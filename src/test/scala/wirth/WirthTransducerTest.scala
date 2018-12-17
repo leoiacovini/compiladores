@@ -32,6 +32,7 @@ class WirthTransducerTest extends WordSpec {
       val lexicalTokens = transducer.transduce(
         Seq(
           AsciiChar(c = 'A', baf = ConsumeLine.Useful, asciiCategory = ConsumeLine.Letter),
+          AsciiChar(c = 'A', baf = ConsumeLine.Useful, asciiCategory = ConsumeLine.Letter),
           AsciiChar(c = ' ', baf = ConsumeLine.Disposable, asciiCategory = ConsumeLine.Delimiter),
           AsciiChar(c = '-', baf = ConsumeLine.Useful, asciiCategory = ConsumeLine.Special),
           AsciiChar(c = '>', baf = ConsumeLine.Useful, asciiCategory = ConsumeLine.Special),
@@ -42,7 +43,7 @@ class WirthTransducerTest extends WordSpec {
         )
       )
       assert(lexicalTokens == Seq(
-        LexicalToken("NonTerminal", "A"),
+        LexicalToken("NonTerminal", "AA"),
         LexicalToken("OtherSymbols", "->"),
         LexicalToken("Terminal", "\"3\""),
         LexicalToken("OtherSymbols", ".")

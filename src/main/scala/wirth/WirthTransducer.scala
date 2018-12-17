@@ -48,7 +48,8 @@ class WirthTransducer extends Transducer {
         "NonTerminal" -> nextNonTerminalRunner,
         "OtherSymbols" -> nextOtherSymbolsRunner
       )
-      val nextLexicalToken = (lexical :: lexicalTerminal :: lexicalNonTerminal :: lexicalOtherSymbols :: Nil).collectFirst { case Some(lt) => lt }
+      val nextLexicalToken = (lexical :: lexicalTerminal :: lexicalNonTerminal :: lexicalOtherSymbols :: Nil)
+        .sortBy(i => i.map(_.rawValue.length).getOrElse(0)).reverse.collectFirst { case Some(lt) => lt }
       (nextState, nextLexicalToken)
     } match {
       case (_, Some(lexicalToken)) =>
@@ -60,7 +61,7 @@ class WirthTransducer extends Transducer {
 
   def transform(lex: Seq[LexicalToken]): Seq[WirthLexicalToken] = {
     lex.map {
-      case LexicalToken("Terminal", rawValue) => Terminal(rawValue.drop(1).dropRight(1))
+      case LexicalToken("Terminal", rawValue) => Terminal(rawValue.drop(1).dropRight(1).replaceAll("""\\"""", "\""))
       case LexicalToken("NonTerminal", rawValue) => NonTerminal(rawValue)
       case LexicalToken("OtherSymbols", "{") => Special("{")
       case LexicalToken("OtherSymbols", "[") => Special("[")
