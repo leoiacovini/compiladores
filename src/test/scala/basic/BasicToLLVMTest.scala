@@ -24,6 +24,7 @@ class BasicToLLVMTest extends WordSpec {
       context2,
       BasicCommand.Assign(BasicToken.Identifier("B"), Expression(BasicToken.Number("42")))
     )
+    val context4 = BasicToLLVM.addLineNumber(context3, BasicToken.LineNumber("10"))
     val expression = Expression(
       BasicToken.OpenParenthesis(),
       BasicToken.Number("10"),
@@ -34,10 +35,10 @@ class BasicToLLVMTest extends WordSpec {
       BasicToken.CloseParenthesis(),
       BasicToken.Multiply(),
       BasicToken.Number("5"))
-    val context4 = BasicToLLVM.calcExpression(context3, expression)
-    println(context4.symbolTable)
-    context4.llvm.statements.foreach(println)
-    writeTestFile(context4.addStatements(LLVMProgram.printTemp(8)))
+    val context5 = BasicToLLVM.calcExpression(context4, expression)
+    println(context5.symbolTable)
+    context5.llvm.statements.foreach(println)
+    writeTestFile(context5.addStatements(LLVMProgram.printTemp(8)))
   }
 
 
