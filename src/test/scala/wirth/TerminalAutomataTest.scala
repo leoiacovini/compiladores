@@ -1,11 +1,8 @@
 package wirth
 
 import common.automata.ndfa.NDFARunner
-import common.automata.ndpa.{NDPARunner, RunHistoryItem}
-import basic.{BasicToLLVM, DPrint}
 import consumers.ConsumeLine
 import consumers.ConsumeLine.AsciiChar
-import llvm.{LLVMProgram, OutputWriter}
 import org.scalatest.WordSpec
 
 class TerminalAutomataTest extends WordSpec {

@@ -84,9 +84,9 @@ class BasicCommandTest extends WordSpec {
 
     assert(BasicCommand.fromTokensLine(dataCommand) ==
       BasicCommand.Data(Seq(
-        BasicToken.Number("10"),
-        BasicToken.Number("20"),
-        BasicToken.Number("30"))))
+        Expression(BasicToken.Number("10")),
+        Expression(BasicToken.Number("20")),
+        Expression(BasicToken.Number("30")))))
   }
 
   "Gosub Command" in {

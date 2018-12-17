@@ -10,7 +10,7 @@ object BasicCommand {
   case class Goto(lineNumber: BasicToken.Number) extends BasicCommand
   case class If(exp1: Expression, exp2: Expression, comparator: BasicToken.Comparator, thenInt: BasicToken.Number) extends BasicCommand
   case class Read(vars: Seq[BasicToken.Identifier]) extends BasicCommand
-  case class Data(values: Seq[BasicToken]) extends BasicCommand
+  case class Data(values: Seq[Expression]) extends BasicCommand
   case class For(varName: BasicToken.Identifier, initialExp: Expression, toExp: Expression, step: Option[Expression] = None) extends BasicCommand
   case class Next(varName: BasicToken.Identifier) extends BasicCommand
   case class GoSub(number: BasicToken.Number) extends BasicCommand
@@ -44,8 +44,8 @@ object BasicCommand {
 
   def tokensLineToData(commandLine: Seq[BasicToken]): BasicCommand.Data = commandLine match {
     case Seq(_data, tail @ _*) =>
-      val items = tail.partition(b => b.isInstanceOf[BasicToken.Delimiter])
-      Data(items._2)
+      val items = splitBySeparator[BasicToken](tail.toList, BasicToken.Delimiter())
+      Data(items.map(i => Expression(i:_*)))
   }
 
   def tokensLineToGoto(commandLine: Seq[BasicToken]): BasicCommand.Goto = commandLine match {
