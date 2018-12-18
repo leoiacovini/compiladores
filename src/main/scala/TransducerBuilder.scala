@@ -27,8 +27,8 @@ object TransducerBuilder {
     val transducer = new WirthTransducer
     val lexical = transducer.transduce(ascii)
     val wirthLex = transducer.transform(lexical)
-    val grammar: Map[NonTerminalToken, Expression] = WirthExperimentation.parseGrammar(wirthLex)
-    WirthExperimentation.printRules(grammar)
+    val grammar: Map[NonTerminalToken, Expression] = WirthGrammarParser.parseGrammar(wirthLex)
+    WirthGrammarParser.printRules(grammar)
     println(grammar(NonTerminalToken("VARIABLENAME")))
     val value = grammar(NonTerminalToken("STRING")) match { case s: Sequence => s.expressions.collect {case t: TerminalToken => t.terminal.str}}
     println(value)

@@ -2,7 +2,7 @@ package wirth
 
 import common.automata.ndpa.{NDPARunner, NonDeterministicPushdownAutomata}
 import org.scalatest.WordSpec
-import wirth.WirthExperimentation.NextExpression
+import wirth.WirthGrammarParser.NextExpression
 import wirth.WirthNotation.{ExpressionInitial, ExpressionRecognized, WirthState}
 import wirth.WirthToNDPA._
 
@@ -84,7 +84,7 @@ class WirthTest extends WordSpec {
         )
       )
 
-      val parsed = WirthExperimentation.parseHandle(x6)
+      val parsed = WirthGrammarParser.parseHandle(x6)
       assert(parsed === parsedExpects)
       //      println(next)
 //      println(rest)
@@ -117,12 +117,12 @@ class WirthTest extends WordSpec {
               NonTerminalToken(NonTerminal("A"))
             )
       )
-      WirthExperimentation.printRules {
+      WirthGrammarParser.printRules {
         grammar
       }
 
-      WirthExperimentation.printRules {
-        WirthExperimentation.reduceRules(grammar)
+      WirthGrammarParser.printRules {
+        WirthGrammarParser.reduceRules(grammar)
       }
     }
   }

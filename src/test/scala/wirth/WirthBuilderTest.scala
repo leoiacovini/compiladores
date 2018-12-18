@@ -16,7 +16,7 @@ class WirthBuilderTest extends WordSpec {
         Special(".")
       )
 
-      assert(WirthExperimentation.parseGrammar(lex) == Map(NonTerminalToken("A") -> TerminalToken("3")))
+      assert(WirthGrammarParser.parseGrammar(lex) == Map(NonTerminalToken("A") -> TerminalToken("3")))
     }
 
     "build a 2 rules grammar" in {
@@ -33,7 +33,7 @@ class WirthBuilderTest extends WordSpec {
         Special(".")
       )
 
-      assert(WirthExperimentation.parseGrammar(lex) == Map(
+      assert(WirthGrammarParser.parseGrammar(lex) == Map(
         NonTerminalToken("A") -> TerminalToken("3"),
         NonTerminalToken("B") -> Or(NonTerminalToken("A"), NonTerminalToken("B"))
       ))
