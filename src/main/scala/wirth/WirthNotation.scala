@@ -105,7 +105,7 @@ object TerminalToken {
   def apply(str: String): TerminalToken = new TerminalToken(Terminal(str))
 }
 
-object WirthExperimentation {
+object WirthGrammarParser {
   import common.automata.SeqStack._
   val openTokens = Seq("(", "[", "{")
   val closeTokens = Seq(")", "]", "}")
@@ -188,9 +188,12 @@ object WirthExperimentation {
           expressions.map {
             case Seq(nt: NonTerminal) => NonTerminalToken(nt)
             case Seq(t: Terminal) => TerminalToken(t)
-            case parentesis: Seq[WirthLexicalToken] if parentesis.headOption.contains(Special("(")) && parentesis.lastOption.contains(Special(")")) => ExpressionParentesis(parseHandle(parentesis.drop(1).dropRight(1)))
-            case brackets: Seq[WirthLexicalToken] if brackets.headOption.contains(Special("[")) && brackets.lastOption.contains(Special("]")) => ExpressionBrackets(parseHandle(brackets.drop(1).dropRight(1)))
-            case kleenes: Seq[WirthLexicalToken] if kleenes.headOption.contains(Special("{")) && kleenes.lastOption.contains(Special("}")) => ExpressionKleene(parseHandle(kleenes.drop(1).dropRight(1)))
+            case parentesis: Seq[WirthLexicalToken] if parentesis.headOption.contains(Special("(")) && parentesis.lastOption.contains(Special(")")) =>
+              ExpressionParentesis(parseHandle(parentesis.drop(1).dropRight(1)))
+            case brackets: Seq[WirthLexicalToken] if brackets.headOption.contains(Special("[")) && brackets.lastOption.contains(Special("]")) =>
+              ExpressionBrackets(parseHandle(brackets.drop(1).dropRight(1)))
+            case kleenes: Seq[WirthLexicalToken] if kleenes.headOption.contains(Special("{")) && kleenes.lastOption.contains(Special("}")) =>
+              ExpressionKleene(parseHandle(kleenes.drop(1).dropRight(1)))
           }
         }
     }
@@ -328,7 +331,7 @@ object WirthToNDPA {
 
   case class ExpressionContext(callStack: Seq[NonTerminalToken], rules: Map[NonTerminalToken, Expression]) {
     import common.automata.SeqStack._
-    val dependencyGraph: Map[NonTerminalToken, Seq[NonTerminalToken]] = rules.map {case (ntt, exp) => ntt -> WirthExperimentation.nonTerminalsOfExpression(exp)}
+    val dependencyGraph: Map[NonTerminalToken, Seq[NonTerminalToken]] = rules.map {case (ntt, exp) => ntt -> WirthGrammarParser.nonTerminalsOfExpression(exp)}
     def getRule(exp: Expression): Option[NonTerminalToken] = rules.map(_.swap).get(exp)
     def isRecursive(ntt: NonTerminalToken): Boolean = callStack.contains(ntt)
     def isRecursiveWithoutContext(ntt: NonTerminalToken, searchRecursive: Seq[NonTerminalToken] = Seq.empty): Boolean = {
@@ -385,7 +388,7 @@ object WirthToNDPA {
       case terminalToken: TerminalToken =>
         fromTerminal(terminalToken)
       case or: Or =>
-        val ndpas: Seq[NonDeterministicPushdownAutomata[WirthLexicalToken, StackAlphabet, WirthGeneratedState]] = or.expressions.filterNot(e => WirthExperimentation.nonTerminalsOfExpression(e).exists(exp => context.isRecursive(exp))).map(o => fromExpression(o, context))
+        val ndpas: Seq[NonDeterministicPushdownAutomata[WirthLexicalToken, StackAlphabet, WirthGeneratedState]] = or.expressions.filterNot(e => WirthGrammarParser.nonTerminalsOfExpression(e).exists(exp => context.isRecursive(exp))).map(o => fromExpression(o, context))
         ndpas.drop(1).foldLeft(ndpas.head) {case (ndpa1, ndpa2) => NonDeterministicPushdownAutomata.or(ndpa1, ndpa2)}
     }
     x
@@ -484,7 +487,7 @@ object WirthToNDPA {
             val centerAutomata = fromExpressionWithoutRecursion(context.rules(ntt), context)
             val leftAutomata = fromExpression(leftExp, context)
             val rightAutomata = fromExpression(rightExp, context)
-            val recursion = CentralAutoRecursion(WirthExperimentation.expToString(leftExp))
+            val recursion = CentralAutoRecursion(WirthGrammarParser.expToString(leftExp))
             println("parts done")
             NonDeterministicPushdownAutomata.concat(
               NonDeterministicPushdownAutomata.concat(
